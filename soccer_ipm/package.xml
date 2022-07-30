@@ -10,14 +10,15 @@
   <depend>ipm_library</depend>
 
 
-  <depend>std_msgs</depend>
-  <depend>sensor_msgs</depend>
-  <depend>tf2</depend>
-  <depend>tf2_sensor_msgs</depend>
-  <depend>tf2_geometry_msgs</depend>
-  <depend>geometry_msgs</depend>
   <depend>bitbots_docs</depend>
+  <depend>cv_bridge</depend>
+  <depend>geometry_msgs</depend>
   <depend>python3-opencv</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_sensor_msgs</depend>
+  <depend>tf2</depend>
   <depend>vision_msgs</depend>
 
   <exec_depend>soccer_vision_2d_msgs</exec_depend>
