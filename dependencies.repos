@@ -1,0 +1,5 @@
+repositories:
+  ipm:
+    type: git
+    url: https://github.com/ros-sports/ipm.git
+    version: rolling
