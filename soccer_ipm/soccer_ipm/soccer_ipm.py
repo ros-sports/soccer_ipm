@@ -19,6 +19,7 @@ from vision_msgs.msg import BoundingBox2D, Point2D
 
 
 class SoccerIPM(Node):
+
     def __init__(self) -> None:
         super().__init__('soccer_ipm')
         # We need to create a dummy tf buffer
@@ -34,47 +35,47 @@ class SoccerIPM(Node):
         # Declare params
         self.declare_parameter('ball.ball_radius', 0.0)
         self.declare_parameter('goalposts.bar_height', 0.0)
-        self.declare_parameter('base_footprint_frame', "base_footprint")
+        self.declare_parameter('base_footprint_frame', 'base_footprint')
         self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.0)
         self.declare_parameter('goalposts.footpoint_out_of_image_threshold', 0.0)
-        self.declare_parameter('camera_info.camera_info_topic', "camera_info")
-        self.declare_parameter('ball.ball_topic', "balls_in_image")
-        self.declare_parameter('goalposts.goalposts_topic', "goalposts_in_image")
-        self.declare_parameter('obstacles.obstacles_topic', "obstacles_in_image")
-        self.declare_parameter('field_boundary.field_boundary_topic', "field_boundary_in_image")
-        self.declare_parameter('masks.line_mask.topic', "line_masks_in_image")
+        self.declare_parameter('camera_info.camera_info_topic', 'camera_info')
+        self.declare_parameter('ball.ball_topic', 'balls_in_image')
+        self.declare_parameter('goalposts.goalposts_topic', 'goalposts_in_image')
+        self.declare_parameter('obstacles.obstacles_topic', 'obstacles_in_image')
+        self.declare_parameter('field_boundary.field_boundary_topic', 'field_boundary_in_image')
+        self.declare_parameter('masks.line_mask.topic', 'line_masks_in_image')
         self.declare_parameter('masks.line_mask.scale', 0.0)
 
         # Parameters
-        self._ball_height = self.get_parameter("ball.ball_radius").value
-        self._bar_height = self.get_parameter("goalposts.bar_height").value
-        self._base_footprint_frame = self.get_parameter("base_footprint_frame").value
+        self._ball_height = self.get_parameter('ball.ball_radius').value
+        self._bar_height = self.get_parameter('goalposts.bar_height').value
+        self._base_footprint_frame = self.get_parameter('base_footprint_frame').value
         self._obstacle_footpoint_out_of_image_threshold = \
-            self.get_parameter("obstacles.footpoint_out_of_image_threshold").value
+            self.get_parameter('obstacles.footpoint_out_of_image_threshold').value
         self._goalpost_footpoint_out_of_image_threshold = \
-            self.get_parameter("goalposts.footpoint_out_of_image_threshold").value
-        camera_info_topic = self.get_parameter("camera_info.camera_info_topic").value
-        balls_in_image_topic = self.get_parameter("ball.ball_topic").value
-        goalposts_in_image_topic = self.get_parameter("goalposts.goalposts_topic").value
-        obstacles_in_image_topic = self.get_parameter("obstacles.obstacles_topic").value
+            self.get_parameter('goalposts.footpoint_out_of_image_threshold').value
+        camera_info_topic = self.get_parameter('camera_info.camera_info_topic').value
+        balls_in_image_topic = self.get_parameter('ball.ball_topic').value
+        goalposts_in_image_topic = self.get_parameter('goalposts.goalposts_topic').value
+        obstacles_in_image_topic = self.get_parameter('obstacles.obstacles_topic').value
         field_boundary_in_image_topic = \
-            self.get_parameter("field_boundary.field_boundary_topic").value
-        line_mask_in_image_topic = self.get_parameter("masks.line_mask.topic").value
-        line_mask_scaling = self.get_parameter("masks.line_mask.scale").value
+            self.get_parameter('field_boundary.field_boundary_topic').value
+        line_mask_in_image_topic = self.get_parameter('masks.line_mask.topic').value
+        line_mask_scaling = self.get_parameter('masks.line_mask.scale').value
 
         # Subscribe to camera info
         self.create_subscription(CameraInfo, camera_info_topic, self.ipm.set_camera_info, 1)
 
         self.balls_pub = self.create_publisher(
-            sv3dm.BallArray, "balls_relative", 1)
+            sv3dm.BallArray, 'balls_relative', 1)
         self.line_mask__pub = self.create_publisher(
-            PointCloud2, "line_mask_relative_pc", 1)
+            PointCloud2, 'line_mask_relative_pc', 1)
         self.goalposts_pub = self.create_publisher(
-            sv3dm.GoalpostArray, "goal_posts_relative", 1)
+            sv3dm.GoalpostArray, 'goal_posts_relative', 1)
         self.robots__pub = self.create_publisher(
-            sv3dm.RobotArray, "robots_relative", 1)
+            sv3dm.RobotArray, 'robots_relative', 1)
         self.field_boundary_pub = self.create_publisher(
-            sv3dm.FieldBoundary, "field_boundary_relative", 1)
+            sv3dm.FieldBoundary, 'field_boundary_relative', 1)
 
         # Subscribe to image space data topics
         self.create_subscription(
@@ -125,7 +126,7 @@ class SoccerIPM(Node):
                 balls_relative.balls.append(ball_relative)
             except NoIntersectionError:
                 self.get_logger().warn(
-                    "Got a ball at ({},{}) I could not transform.".format(
+                    'Got a ball at ({},{}) I could not transform.'.format(
                         ball.center.x,
                         ball.center.y),
                     throttle_duration_sec=5)
@@ -168,7 +169,7 @@ class SoccerIPM(Node):
                     goalposts_relative_msg.posts.append(post_relative)
                 except NoIntersectionError:
                     self.get_logger().warn(
-                        "Got a post with foot point ({},{}) I could not transform.".format(
+                        'Got a post with foot point ({},{}) I could not transform.'.format(
                             footpoint.point.x,
                             footpoint.point.y),
                         throttle_duration_sec=5)
@@ -210,7 +211,7 @@ class SoccerIPM(Node):
                     robots.robots.append(transformed_robot)
                 except NoIntersectionError:
                     self.get_logger().warn(
-                        "Got a robot with foot point ({},{}) I could not transform.".format(
+                        'Got a robot with foot point ({},{}) I could not transform.'.format(
                             footpoint.point.x,
                             footpoint.point.y),
                         throttle_duration_sec=5)
@@ -239,7 +240,7 @@ class SoccerIPM(Node):
                 field_boundary.points.append(relative_foot_point.point)
             except NoIntersectionError:
                 self.get_logger().warn(
-                    "Got a field boundary point ({},{}) I could not transform.".format(
+                    'Got a field boundary point ({},{}) I could not transform.'.format(
                         image_point.point.x,
                         image_point.point.y),
                     throttle_duration_sec=5)

@@ -73,12 +73,12 @@ def standard_ipm_test_case(
     # Create header message for the current time stamp in the camera frame
     header = Header(
         stamp=node.get_clock().now().to_msg(),
-        frame_id="camera_optical_frame")
+        frame_id='camera_optical_frame')
 
     # Create a dummy transform from the camera to the base_footprint frame
     tf = TransformStamped(
         header=header,
-        child_frame_id="base_footprint",
+        child_frame_id='base_footprint',
     )
     tf.transform.translation.z = 1.0
     tf.transform.rotation.x = 0.0
