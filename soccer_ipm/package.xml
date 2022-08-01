@@ -14,13 +14,13 @@
   <depend>cv_bridge</depend>
   <depend>geometry_msgs</depend>
   <depend>python3-opencv</depend>
+  <depend>sensor_msgs_py</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_sensor_msgs</depend>
   <depend>tf2</depend>
   <depend>vision_msgs</depend>
-  <depend>sensor_msgs_py</depend>
 
   <exec_depend>soccer_vision_2d_msgs</exec_depend>
   <exec_depend>soccer_vision_3d_msgs</exec_depend>
