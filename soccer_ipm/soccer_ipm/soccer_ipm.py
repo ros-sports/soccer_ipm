@@ -47,7 +47,7 @@ class SoccerIPM(Node):
         self.declare_parameter('masks.line_mask.scale', 0.0)
 
         # Parameters
-        self._ball_height = self.get_parameter('ball.ball_radius').value
+        self._ball_height = self.get_parameter('balls.ball_radius').value
         self._bar_height = self.get_parameter('goalposts.bar_height').value
         self._base_footprint_frame = self.get_parameter('base_footprint_frame').value
         self._obstacle_footpoint_out_of_image_threshold = \
