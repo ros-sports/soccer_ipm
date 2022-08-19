@@ -33,7 +33,7 @@ class SoccerIPM(Node):
         self._cv_bridge = CvBridge()
 
         # Declare params
-        self.declare_parameter('ball.ball_radius', 0.0)
+        self.declare_parameter('balls.ball_radius', 0.0)
         self.declare_parameter('goalposts.bar_height', 0.0)
         self.declare_parameter('base_footprint_frame', 'base_footprint')
         self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.0)
