@@ -66,6 +66,7 @@ class SoccerIPM(Node):
         # Subscribe to camera info
         self.create_subscription(CameraInfo, camera_info_topic, self.ipm.set_camera_info, 1)
 
+        # Create publishers for 3d topics
         self.balls_pub = self.create_publisher(
             sv3dm.BallArray, 'balls_relative', 1)
         self.line_mask__pub = self.create_publisher(
