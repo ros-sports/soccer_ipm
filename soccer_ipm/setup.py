@@ -20,7 +20,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='florian',
+    maintainer='Florian Vahl',
     maintainer_email='florian@flova.de',
     description='Inverse perspective mapping for the RoboCup soccer domain',
     license='Apache License 2.0',
