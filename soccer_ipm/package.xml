@@ -7,12 +7,13 @@
   <maintainer email="florian@flova.de">Florian Vahl</maintainer>
   <license>Apache License 2.0</license>
 
-  <depend>ipm_library</depend>
-
-
+  <exec_depend>soccer_vision_2d_msgs</exec_depend>
+  <exec_depend>soccer_vision_3d_msgs</exec_depend>
+  
   <depend>bitbots_docs</depend>
   <depend>cv_bridge</depend>
   <depend>geometry_msgs</depend>
+  <depend>ipm_library</depend>
   <depend>python3-opencv</depend>
   <depend>sensor_msgs_py</depend>
   <depend>sensor_msgs</depend>
@@ -21,10 +22,6 @@
   <depend>tf2_sensor_msgs</depend>
   <depend>tf2</depend>
   <depend>vision_msgs</depend>
-
-  <exec_depend>soccer_vision_2d_msgs</exec_depend>
-  <exec_depend>soccer_vision_3d_msgs</exec_depend>
-
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
