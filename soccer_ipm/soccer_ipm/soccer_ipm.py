@@ -22,7 +22,7 @@ class SoccerIPM(Node):
 
     def __init__(self) -> None:
         super().__init__('soccer_ipm')
-        # We need to create a dummy tf buffer
+        # We need to create a tf buffer
         self.tf_buffer = tf2.Buffer(cache_time=Duration(seconds=30.0))
         self.tf_listener = tf2.TransformListener(self.tf_buffer, self)
 
