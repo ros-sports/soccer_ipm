@@ -1,6 +1,6 @@
 soccer_ipm:
   ros__parameters:
-    ball:
+    balls:
       ball_topic: 'balls_in_image'
       ball_radius: 0.075
       
