@@ -10,7 +10,6 @@
   <exec_depend>soccer_vision_2d_msgs</exec_depend>
   <exec_depend>soccer_vision_3d_msgs</exec_depend>
   
-  <depend>bitbots_docs</depend>
   <depend>cv_bridge</depend>
   <depend>geometry_msgs</depend>
   <depend>ipm_library</depend>
