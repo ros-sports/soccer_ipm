@@ -1,0 +1,16 @@
+soccer_ipm:
+  ros__parameters:
+    balls:
+      ball_diameter: 0.153
+
+    goalposts:
+      footpoint_out_of_image_threshold: 0.8
+
+    obstacles:
+      footpoint_out_of_image_threshold: 0.8
+
+    masks:
+      line_mask:
+        scale: 0.25
+
+    output_frame: 'base_footprint'

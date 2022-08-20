@@ -1,5 +1,6 @@
 import cv2
 from cv_bridge import CvBridge
+from geometry_msgs.msg import Point
 from ipm_interfaces.msg import PlaneStamped, Point2DStamped
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
@@ -10,8 +11,7 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
 from sensor_msgs_py.point_cloud2 import create_cloud_xyz32
-from soccer_vision_2d_msgs.msg import (BallArray, FieldBoundary, GoalpostArray,
-                                       RobotArray)
+import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 from std_msgs.msg import Header
 import tf2_ros as tf2
@@ -33,93 +33,81 @@ class SoccerIPM(Node):
         self._cv_bridge = CvBridge()
 
         # Declare params
-        self.declare_parameter('balls.ball_radius', 0.0)
-        self.declare_parameter('goalposts.bar_height', 0.0)
-        self.declare_parameter('base_footprint_frame', 'base_footprint')
-        self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.0)
-        self.declare_parameter('goalposts.footpoint_out_of_image_threshold', 0.0)
-        self.declare_parameter('camera_info.camera_info_topic', 'camera_info')
-        self.declare_parameter('ball.ball_topic', 'balls_in_image')
-        self.declare_parameter('goalposts.goalposts_topic', 'goalposts_in_image')
-        self.declare_parameter('obstacles.obstacles_topic', 'obstacles_in_image')
-        self.declare_parameter('field_boundary.field_boundary_topic', 'field_boundary_in_image')
-        self.declare_parameter('masks.line_mask.topic', 'line_masks_in_image')
+        self.declare_parameter('balls.ball_diameter', 0.153)
+        self.declare_parameter('output_frame', 'base_footprint')
+        self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.8)
+        self.declare_parameter('goalposts.footpoint_out_of_image_threshold', 0.8)
         self.declare_parameter('masks.line_mask.scale', 0.0)
 
         # Parameters
-        self._ball_height = self.get_parameter('balls.ball_radius').value
-        self._bar_height = self.get_parameter('goalposts.bar_height').value
-        self._base_footprint_frame = self.get_parameter('base_footprint_frame').value
+        self._ball_diameter = self.get_parameter('balls.ball_diameter').value
+        self._output_frame = self.get_parameter('output_frame').value
         self._obstacle_footpoint_out_of_image_threshold = \
             self.get_parameter('obstacles.footpoint_out_of_image_threshold').value
         self._goalpost_footpoint_out_of_image_threshold = \
             self.get_parameter('goalposts.footpoint_out_of_image_threshold').value
-        camera_info_topic = self.get_parameter('camera_info.camera_info_topic').value
-        balls_in_image_topic = self.get_parameter('ball.ball_topic').value
-        goalposts_in_image_topic = self.get_parameter('goalposts.goalposts_topic').value
-        obstacles_in_image_topic = self.get_parameter('obstacles.obstacles_topic').value
-        field_boundary_in_image_topic = \
-            self.get_parameter('field_boundary.field_boundary_topic').value
-        line_mask_in_image_topic = self.get_parameter('masks.line_mask.topic').value
         line_mask_scaling = self.get_parameter('masks.line_mask.scale').value
 
         # Subscribe to camera info
-        self.create_subscription(CameraInfo, camera_info_topic, self.ipm.set_camera_info, 1)
+        self.create_subscription(CameraInfo, 'camera_info', self.ipm.set_camera_info, 1)
 
         # Create publishers for 3d topics
         self.balls_pub = self.create_publisher(
             sv3dm.BallArray, 'balls_relative', 1)
-        self.line_mask__pub = self.create_publisher(
+        self.line_mask_pub = self.create_publisher(
             PointCloud2, 'line_mask_relative_pc', 1)
         self.goalposts_pub = self.create_publisher(
             sv3dm.GoalpostArray, 'goal_posts_relative', 1)
-        self.robots__pub = self.create_publisher(
+        self.robots_pub = self.create_publisher(
             sv3dm.RobotArray, 'robots_relative', 1)
+        self.obstacles_pub = self.create_publisher(
+            sv3dm.ObstacleArray, 'obstacles_relative', 1)
         self.field_boundary_pub = self.create_publisher(
             sv3dm.FieldBoundary, 'field_boundary_relative', 1)
 
         # Subscribe to image space data topics
         self.create_subscription(
-            BallArray, balls_in_image_topic, self.callback_ball, 1)
+            sv2dm.BallArray, 'balls_in_image', self.callback_ball, 1)
         self.create_subscription(
-            GoalpostArray, goalposts_in_image_topic, self.callback_goalposts, 1)
+            sv2dm.GoalpostArray, 'goal_posts_in_image', self.callback_goalposts, 1)
         self.create_subscription(
-            RobotArray, obstacles_in_image_topic, self.callback_robots, 1)
+            sv2dm.RobotArray, 'robots_in_image', self.callback_robots, 1)
         self.create_subscription(
-            FieldBoundary, field_boundary_in_image_topic, self.callback_field_boundary, 1)
+            sv2dm.ObstacleArray, 'obstalces_in_image', self.callback_obstacles, 1)
+        self.create_subscription(
+            sv2dm.FieldBoundary, 'field_boundary_in_image', self.callback_field_boundary, 1)
         self.create_subscription(
             Image,
-            line_mask_in_image_topic,
+            'line_mask_in_image',
             lambda msg: self.callback_masks(
                 msg,
-                self.line_mask__pub,
+                self.line_mask_pub,
                 scale=line_mask_scaling), 1)
 
     def get_field(self, time, heigh_offset=0):
         plane = PlaneStamped()
-        plane.header.frame_id = self._base_footprint_frame
+        plane.header.frame_id = self._output_frame
         plane.header.stamp = time
         plane.plane.coef[2] = 1.0  # Normal in z direction
         plane.plane.coef[3] = -heigh_offset  # Distance above the ground
         return plane
 
-    def callback_ball(self, msg: BallArray):
-        field = self.get_field(msg.header.stamp, self._ball_height)
+    def callback_ball(self, msg: sv2dm.BallArray):
+        field = self.get_field(msg.header.stamp, self._ball_diameter / 2)
 
         balls_relative = sv3dm.BallArray()
         balls_relative.header.stamp = msg.header.stamp
-        balls_relative.header.frame_id = self._base_footprint_frame
+        balls_relative.header.frame_id = self._output_frame
 
         for ball in msg.balls:
             ball_point = Point2DStamped(
                 header=msg.header,
                 point=ball.center)
-
             try:
                 transformed_ball = self.ipm.map_point(
                     field,
                     ball_point,
-                    output_frame=self._base_footprint_frame)
+                    output_frame=self._output_frame)
 
                 ball_relative = sv3dm.Ball()
                 ball_relative.center = transformed_ball.point
@@ -134,13 +122,13 @@ class SoccerIPM(Node):
 
         self.balls_pub.publish(balls_relative)
 
-    def callback_goalposts(self, msg: GoalpostArray):
+    def callback_goalposts(self, msg: sv2dm.GoalpostArray):
         field = self.get_field(msg.header.stamp)
 
         # Create new message
         goalposts_relative_msg = sv3dm.GoalpostArray()
         goalposts_relative_msg.header.stamp = msg.header.stamp
-        goalposts_relative_msg.header.frame_id = self._base_footprint_frame
+        goalposts_relative_msg.header.frame_id = self._output_frame
 
         # Transform goal posts
         for goal_post_in_image in msg.posts:
@@ -158,7 +146,7 @@ class SoccerIPM(Node):
                     relative_foot_point = self.ipm.map_point(
                         field,
                         footpoint,
-                        output_frame=self._base_footprint_frame)
+                        output_frame=self._output_frame)
 
                     post_relative = sv3dm.Goalpost()
                     post_relative.attributes = goal_post_in_image.attributes
@@ -177,12 +165,12 @@ class SoccerIPM(Node):
 
         self.goalposts_pub.publish(goalposts_relative_msg)
 
-    def callback_robots(self, msg: RobotArray):
+    def callback_robots(self, msg: sv2dm.RobotArray):
         field = self.get_field(msg.header.stamp, 0.0)
 
         robots = sv3dm.RobotArray()
         robots.header.stamp = msg.header.stamp
-        robots.header.frame_id = self._base_footprint_frame
+        robots.header.frame_id = self._output_frame
 
         for robot in msg.robots:
 
@@ -200,7 +188,7 @@ class SoccerIPM(Node):
                     relative_foot_point = self.ipm.map_point(
                         field,
                         footpoint,
-                        output_frame=self._base_footprint_frame)
+                        output_frame=self._output_frame)
 
                     transformed_robot = sv3dm.Robot()
                     transformed_robot.attributes = robot.attributes
@@ -217,34 +205,69 @@ class SoccerIPM(Node):
                             footpoint.point.y),
                         throttle_duration_sec=5)
 
-        self.robots__pub.publish(robots)
+        self.robots_pub.publish(robots)
 
-    def callback_field_boundary(self, msg: FieldBoundary):
+    def callback_obstacles(self, msg: sv2dm.ObstacleArray):
+        field = self.get_field(msg.header.stamp, 0.0)
+
+        obstacles = sv3dm.ObstacleArray()
+        obstacles.header.stamp = msg.header.stamp
+        obstacles.header.frame_id = self._output_frame
+
+        obstacle: sv2dm.Obstacle
+        for obstacle in msg.obstacles:
+
+            # Check if post is not going out of the image at the bottom
+            if not self._object_at_bottom_of_image(
+                    self._bb_footpoint(obstacle.bb).y,
+                    self._goalpost_footpoint_out_of_image_threshold):
+                # Create footpoint
+                footpoint = Point2DStamped(
+                    header=msg.header,
+                    point=self._bb_footpoint(obstacle.bb)
+                )
+                # Map point from image onto field plane
+                try:
+                    relative_foot_point = self.ipm.map_point(
+                        field,
+                        footpoint,
+                        output_frame=self._output_frame)
+                    transformed_obstacle = sv3dm.Obstacle()
+                    transformed_obstacle.confidence = obstacle.confidence
+                    transformed_obstacle.bb.center.position = relative_foot_point.point
+                    transformed_obstacle.bb.size.x = 0.3   # TODO better size estimation
+                    transformed_obstacle.bb.size.y = 0.3   # TODO better size estimation
+                    transformed_obstacle.bb.size.z = 0.5   # TODO better size estimation
+                    obstacles.obstacles.append(transformed_obstacle)
+                except NoIntersectionError:
+                    self.get_logger().warn(
+                        'Got a obstacle with foot point ({},{}) I could not transform.'.format(
+                            footpoint.point.x,
+                            footpoint.point.y),
+                        throttle_duration_sec=5)
+
+        self.obstacles_pub.publish(obstacles)
+
+    def callback_field_boundary(self, msg: sv2dm.FieldBoundary):
         field = self.get_field(msg.header.stamp, 0.0)
 
         field_boundary = sv3dm.FieldBoundary()
         field_boundary.header.stamp = msg.header.stamp
-        field_boundary.header.frame_id = self._base_footprint_frame
-        field_boundary.confidence = field_boundary.confidence
+        field_boundary.header.frame_id = self._output_frame
+        field_boundary.confidence = msg.confidence
 
-        for p in msg.points:
-            image_point = Point2DStamped(
-                header=msg.header,
-                point=p)
-            # Map point from image onto field plane
-            try:
-                relative_foot_point = self.ipm.map_point(
-                    field,
-                    image_point,
-                    output_frame=self._base_footprint_frame)
+        # Convert points to numpy array
+        points_np = np.array([[p.x, p.y] for p in msg.points])
 
-                field_boundary.points.append(relative_foot_point.point)
-            except NoIntersectionError:
-                self.get_logger().warn(
-                    'Got a field boundary point ({},{}) I could not transform.'.format(
-                        image_point.point.x,
-                        image_point.point.y),
-                    throttle_duration_sec=5)
+        # Map all points at once from image onto field plane
+        points_on_plane = self.ipm.map_points(
+            field,
+            points_np,
+            msg.header,
+            output_frame=self._output_frame)
+
+        # Convert numpy array to points
+        field_boundary.points = [Point(x=p[0], y=p[1], z=p[2]) for p in points_on_plane]
 
         self.field_boundary_pub.publish(field_boundary)
 
@@ -280,13 +303,13 @@ class SoccerIPM(Node):
                     field,
                     point_idx_array,
                     msg.header,
-                    output_frame=self._base_footprint_frame)
+                    output_frame=self._output_frame)
 
         # Make a pointcloud2 out of them
         pc = create_cloud_xyz32(
             Header(
                 stamp=msg.header.stamp,
-                frame_id=self._base_footprint_frame
+                frame_id=self._output_frame
             ),
             points_on_plane)
 

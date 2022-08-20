@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from geometry_msgs.msg import TransformStamped
 import numpy as np
@@ -20,11 +20,12 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo
 from soccer_ipm.soccer_ipm import SoccerIPM
-from soccer_vision_2d_msgs.msg import Ball, BallArray, GoalpostArray, RobotArray
+import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
-from soccer_vision_attribute_msgs.msg import Confidence
+import soccer_vision_attribute_msgs.msg as sva
 from std_msgs.msg import Header
 from tf2_msgs.msg import TFMessage
+from vision_msgs.msg import Point2D
 
 # Dummy CameraInfo Message
 camera_info = CameraInfo(
@@ -37,14 +38,20 @@ camera_info = CameraInfo(
         binning_y=4,
         k=[1338.64532, 0., 1024.0, 0., 1337.89746, 768.0, 0., 0., 1.])
 
+img_center_x = camera_info.width / camera_info.binning_x // 2
+img_center_y = camera_info.height / camera_info.binning_y // 2
+
+# Custom types
+SV2DARR = Union[sv2dm.BallArray, sv2dm.GoalpostArray, sv2dm.RobotArray, sv2dm.FieldBoundary]
+SV3DARR = Union[sv3dm.BallArray, sv3dm.GoalpostArray, sv3dm.RobotArray, sv3dm.FieldBoundary]
+
 
 def standard_ipm_test_case(
         input_msg_type: type,
         input_topic: str,
-        input_msg: Union[BallArray, GoalpostArray, RobotArray],
+        input_msg: SV2DARR,
         output_msg_type: type,
-        output_topic: str) -> Union[
-            sv3dm.BallArray, sv3dm.GoalpostArray, sv3dm.RobotArray]:
+        output_topic: str) -> Tuple[SV3DARR, SV2DARR]:
     # Init ros
     rclpy.init()
     # Create IPM node
@@ -119,30 +126,30 @@ def standard_ipm_test_case(
 
 def test_ipm_empty_ball():
     standard_ipm_test_case(
-        BallArray,
+        sv2dm.BallArray,
         'balls_in_image',
-        BallArray(),
+        sv2dm.BallArray(),
         sv3dm.BallArray,
         'balls_relative')
 
 
 def test_ipm_ball():
     # Create ball detection
-    ball = Ball()
-    ball.center.x = camera_info.width / camera_info.binning_x // 2
-    ball.center.y = camera_info.height / camera_info.binning_y // 2
-    ball.confidence = Confidence(confidence=0.42)
-    ball_detection = BallArray(balls=[ball])
+    ball = sv2dm.Ball()
+    ball.center.x = img_center_x
+    ball.center.y = img_center_y
+    ball.confidence = sva.Confidence(confidence=0.42)
+    ball_detection = sv2dm.BallArray(balls=[ball])
 
     out, inp = standard_ipm_test_case(
-        BallArray,
+        sv2dm.BallArray,
         'balls_in_image',
         ball_detection,
         sv3dm.BallArray,
         'balls_relative')
 
     # Assert that we recived the correct message
-    assert len(out.balls) == 1, 'Got too many balls'
+    assert len(out.balls) == 1, 'Wrong number of detections'
     assert out.header.stamp == inp.header.stamp, 'Time stamp got changed by the ipm'
     assert out.header.frame_id == 'base_footprint', \
         'Output frame is not "base_footprint"'
@@ -152,4 +159,111 @@ def test_ipm_ball():
         ball.confidence.confidence)
     np.testing.assert_allclose(
         [ball_relative.center.x, ball_relative.center.y, ball_relative.center.z],
+        [0.0, 0.0, 0.0765])
+
+
+def test_ipm_goalposts():
+    # Create goalpost detection
+    goalpost = sv2dm.Goalpost()
+    goalpost.bb.size_x = 50.0
+    goalpost.bb.size_y = 20.0
+    # Footpoint in the cenetr of the image
+    goalpost.bb.center.position.x = img_center_x
+    goalpost.bb.center.position.y = img_center_y - goalpost.bb.size_y // 2
+    goalpost.confidence = sva.Confidence(confidence=0.42)
+    goalpost.attributes.side = sva.Goalpost.SIDE_LEFT
+    goalpost.attributes.team = sva.Goalpost.TEAM_OPPONENT
+    goalpost_detections = sv2dm.GoalpostArray(posts=[goalpost])
+
+    out, inp = standard_ipm_test_case(
+        sv2dm.GoalpostArray,
+        'goal_posts_in_image',
+        goalpost_detections,
+        sv3dm.GoalpostArray,
+        'goal_posts_relative')
+
+    # Assert that we recived the correct message
+    assert len(out.posts) == 1, 'Wrong number of detections'
+    assert out.header.stamp == inp.header.stamp, 'Time stamp got changed by the ipm'
+    assert out.header.frame_id == 'base_footprint', \
+        'Output frame is not "base_footprint"'
+    goalpost_relative: sv3dm.Goalpost = out.posts[0]
+    np.testing.assert_allclose(
+        goalpost_relative.confidence.confidence,
+        goalpost.confidence.confidence)
+    np.testing.assert_allclose(
+        [
+            goalpost_relative.bb.center.position.x,
+            goalpost_relative.bb.center.position.y,
+            goalpost_relative.bb.center.position.z
+        ],
+        [0.0, 0.0, 0.0])
+
+
+def test_ipm_robots():
+    # Create goalpost detection
+    robot = sv2dm.Robot()
+    robot.bb.size_x = 50.0
+    robot.bb.size_y = 20.0
+    # Footpoint in the cenetr of the image
+    robot.bb.center.position.x = img_center_x
+    robot.bb.center.position.y = img_center_y - robot.bb.size_y // 2
+    robot.confidence = sva.Confidence(confidence=0.42)
+    robot.attributes.state = sva.Robot.STATE_STANDING
+    robot.attributes.team = sva.Robot.TEAM_OPPONENT
+    robot.attributes.facing = sva.Robot.FACING_AWAY
+    robot_detections = sv2dm.RobotArray(robots=[robot])
+
+    out, inp = standard_ipm_test_case(
+        sv2dm.RobotArray,
+        'robots_in_image',
+        robot_detections,
+        sv3dm.RobotArray,
+        'robots_relative')
+
+    # Assert that we recived the correct message
+    assert len(out.robots) == 1, 'Wrong number of detections'
+    assert out.header.stamp == inp.header.stamp, 'Time stamp got changed by the ipm'
+    assert out.header.frame_id == 'base_footprint', \
+        'Output frame is not "base_footprint"'
+    robot_relative: sv3dm.Robot = out.robots[0]
+    assert robot_relative.attributes == robot.attributes, 'Attributes changed'
+    np.testing.assert_allclose(
+        robot_relative.confidence.confidence,
+        robot.confidence.confidence)
+    np.testing.assert_allclose(
+        [
+            robot_relative.bb.center.position.x,
+            robot_relative.bb.center.position.y,
+            robot_relative.bb.center.position.z
+        ],
+        [0.0, 0.0, 0.0])
+
+
+def test_ipm_field_boundary():
+    # Create goalpost detection
+    field_boundary = sv2dm.FieldBoundary()
+    field_boundary.confidence = sva.Confidence(confidence=0.42)
+    field_boundary.points = [
+        Point2D(
+            x=float(img_center_x + i),
+            y=float(img_center_y + i)) for i in range(100)]
+
+    out, inp = standard_ipm_test_case(
+        sv2dm.FieldBoundary,
+        'field_boundary_in_image',
+        field_boundary,
+        sv3dm.FieldBoundary,
+        'field_boundary_relative')
+
+    # Assert that we recived the correct message
+    assert len(out.points) == 100, 'Wrong number of detections'
+    assert out.header.stamp == inp.header.stamp, 'Time stamp got changed by the ipm'
+    assert out.header.frame_id == 'base_footprint', \
+        'Output frame is not "base_footprint"'
+    np.testing.assert_allclose(
+        out.confidence.confidence,
+        field_boundary.confidence.confidence)
+    np.testing.assert_allclose(
+        [out.points[0].x, out.points[0].y, out.points[0].z],
         [0.0, 0.0, 0.0])
