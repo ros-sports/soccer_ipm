@@ -42,8 +42,20 @@ img_center_x = camera_info.width / camera_info.binning_x // 2
 img_center_y = camera_info.height / camera_info.binning_y // 2
 
 # Custom types
-SV2DARR = Union[sv2dm.BallArray, sv2dm.GoalpostArray, sv2dm.RobotArray, sv2dm.FieldBoundary]
-SV3DARR = Union[sv3dm.BallArray, sv3dm.GoalpostArray, sv3dm.RobotArray, sv3dm.FieldBoundary]
+SV2DARR = Union[
+    sv2dm.BallArray,
+    sv2dm.FieldBoundary,
+    sv2dm.GoalpostArray,
+    sv2dm.ObstacleArray,
+    sv2dm.RobotArray
+]
+SV3DARR = Union[
+    sv3dm.BallArray,
+    sv3dm.FieldBoundary,
+    sv3dm.GoalpostArray,
+    sv3dm.ObstacleArray,
+    sv3dm.RobotArray
+]
 
 
 def standard_ipm_test_case(
@@ -236,6 +248,42 @@ def test_ipm_robots():
             robot_relative.bb.center.position.x,
             robot_relative.bb.center.position.y,
             robot_relative.bb.center.position.z
+        ],
+        [0.0, 0.0, 0.0])
+
+
+def test_ipm_obstacles():
+    # Create goalpost detection
+    obstacle = sv2dm.Obstacle()
+    obstacle.bb.size_x = 50.0
+    obstacle.bb.size_y = 20.0
+    # Footpoint in the cenetr of the image
+    obstacle.bb.center.position.x = img_center_x
+    obstacle.bb.center.position.y = img_center_y - obstacle.bb.size_y // 2
+    obstacle.confidence = sva.Confidence(confidence=0.42)
+    obstacle_detections = sv2dm.ObstacleArray(obstacles=[obstacle])
+
+    out, inp = standard_ipm_test_case(
+        sv2dm.ObstacleArray,
+        'obstalces_in_image',
+        obstacle_detections,
+        sv3dm.ObstacleArray,
+        'obstacles_relative')
+
+    # Assert that we recived the correct message
+    assert len(out.obstacles) == 1, 'Wrong number of detections'
+    assert out.header.stamp == inp.header.stamp, 'Time stamp got changed by the ipm'
+    assert out.header.frame_id == 'base_footprint', \
+        'Output frame is not "base_footprint"'
+    obstacle_relative: sv3dm.Obstacle = out.obstacles[0]
+    np.testing.assert_allclose(
+        obstacle_relative.confidence.confidence,
+        obstacle.confidence.confidence)
+    np.testing.assert_allclose(
+        [
+            obstacle_relative.bb.center.position.x,
+            obstacle_relative.bb.center.position.y,
+            obstacle_relative.bb.center.position.z
         ],
         [0.0, 0.0, 0.0])
 
