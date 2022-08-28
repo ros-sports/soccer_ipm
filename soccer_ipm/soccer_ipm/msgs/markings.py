@@ -10,6 +10,7 @@ from soccer_ipm.utils import create_field_plane
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 from std_msgs.msg import Header
+from vision_msgs.msg import Point2D
 
 
 def map_marking_array(
@@ -71,7 +72,7 @@ def map_marking_intersections(
     intersections_3d = []
 
     intersection: sv2dm.MarkingIntersection
-    for intersection in intersections_2d.intersections:
+    for intersection in intersections_2d:
         # Create center point
         center = Point2DStamped(
             header=header,
@@ -90,10 +91,13 @@ def map_marking_intersections(
 
             # Project rays
             for ray in intersection.heading_rays:
-                # Create heading vector in image space
-                ray_vector = np.array([np.sin(ray), np.cos(ray)])
-                # Add heading vector to the center of the marking in image space
-                ray_end_point = center + ray_vector
+                # Create center point offset by the heading vector in image space
+                ray_end_point = Point2DStamped(
+                    header=header,
+                    point=Point2D(
+                        x=center.point.x + np.sin(ray),
+                        y=center.point.y + np.cos(ray))
+                    )
                 # Map newly optained end point of the ray
                 mapped_ray_end = ipm.map_point(
                     field,
@@ -198,10 +202,15 @@ def map_marking_ellipses(
         )
 
         # TODO check math
-        diff = ellipse.bb.center.x - ellipse.center.x
+        diff = ellipse.bb.center.position.x - ellipse.center.x
         radius = ellipse.bb.size_x // 2 + diff
-        side_point = center.copy()
-        side_point.x += radius
+        side_point = Point2DStamped(
+            header=header,
+            point=Point2D(
+                x=ellipse.center.x + radius,
+                y=ellipse.center.y
+            )
+        )
 
         # Map point from image onto field plane
         try:
@@ -214,7 +223,7 @@ def map_marking_ellipses(
                 side_point,
                 output_frame=output_frame)
             mapped_ellipse = sv3dm.MarkingEllipse()
-            mapped_ellipse.center = mapped_center_point.point
+            mapped_ellipse.center.position = mapped_center_point.point
             mapped_ellipse.confidence.confidence = ellipse.confidence.confidence
             radius = np.linalg.norm(
                 [

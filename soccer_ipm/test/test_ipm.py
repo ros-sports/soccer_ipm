@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 from typing import List, Optional, Tuple, Union
 
 from geometry_msgs.msg import TransformStamped
@@ -46,6 +47,7 @@ SV2DARR = Union[
     sv2dm.BallArray,
     sv2dm.FieldBoundary,
     sv2dm.GoalpostArray,
+    sv2dm.MarkingArray,
     sv2dm.ObstacleArray,
     sv2dm.RobotArray
 ]
@@ -53,6 +55,7 @@ SV3DARR = Union[
     sv3dm.BallArray,
     sv3dm.FieldBoundary,
     sv3dm.GoalpostArray,
+    sv3dm.MarkingArray,
     sv3dm.ObstacleArray,
     sv3dm.RobotArray
 ]
@@ -213,7 +216,7 @@ def test_ipm_goalposts():
 
 
 def test_ipm_robots():
-    # Create goalpost detection
+    # Create robot detection
     robot = sv2dm.Robot()
     robot.bb.size_x = 50.0
     robot.bb.size_y = 20.0
@@ -253,7 +256,7 @@ def test_ipm_robots():
 
 
 def test_ipm_obstacles():
-    # Create goalpost detection
+    # Create obstacle detection
     obstacle = sv2dm.Obstacle()
     obstacle.bb.size_x = 50.0
     obstacle.bb.size_y = 20.0
@@ -289,7 +292,7 @@ def test_ipm_obstacles():
 
 
 def test_ipm_field_boundary():
-    # Create goalpost detection
+    # Create field boundary detection
     field_boundary = sv2dm.FieldBoundary()
     field_boundary.confidence = sva.Confidence(confidence=0.42)
     field_boundary.points = [
@@ -315,3 +318,57 @@ def test_ipm_field_boundary():
     np.testing.assert_allclose(
         [out.points[0].x, out.points[0].y, out.points[0].z],
         [0.0, 0.0, 0.0])
+
+
+def test_ipm_markings():
+    # Create marking detections
+    marking_array = sv2dm.MarkingArray()
+
+    marking_intersection = sv2dm.MarkingIntersection()
+    marking_intersection.confidence = sva.Confidence(confidence=0.42)
+    marking_intersection.center = Point2D(
+        x=float(img_center_x),
+        y=float(img_center_y))
+    marking_intersection.heading_rays = [
+        0.0 * math.tau,
+        0.5 * math.tau,
+        0.25 * math.tau]
+    marking_intersection.num_rays = 3
+    marking_array.intersections.append(marking_intersection)
+
+    marking_segment = sv2dm.MarkingSegment()
+    marking_segment.confidence = sva.Confidence(confidence=0.42)
+    marking_segment.start = Point2D(
+        x=float(img_center_x),
+        y=float(img_center_y))
+    marking_segment.end = Point2D(
+        x=float(img_center_x + 1.0),
+        y=float(img_center_y))
+    marking_array.segments.append(marking_segment)
+
+    marking_ellipse = sv2dm.MarkingEllipse()
+    marking_ellipse.confidence = sva.Confidence(confidence=0.42)
+    marking_ellipse.bb.center.position = Point2D(
+        x=float(img_center_x + 1.0),
+        y=float(img_center_y))
+    marking_ellipse.bb.size_x = 10.0
+    marking_ellipse.bb.size_y = 10.0
+    marking_ellipse.center = Point2D(
+        x=float(img_center_x),
+        y=float(img_center_y))
+    marking_array.ellipses.append(marking_ellipse)
+
+    out, inp = standard_ipm_test_case(
+        sv2dm.MarkingArray,
+        'markings_in_image',
+        marking_array,
+        sv3dm.MarkingArray,
+        'markings_relative')
+
+    # Assert that we recived the correct message
+    assert len(out.intersections) == 1, 'Wrong number of detections'
+    assert out.header.stamp == inp.header.stamp, 'Time stamp got changed by the ipm'
+    assert out.header.frame_id == 'base_footprint', \
+        'Output frame is not "base_footprint"'
+
+    # TODO more tests
