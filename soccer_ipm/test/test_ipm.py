@@ -367,6 +367,8 @@ def test_ipm_markings():
 
     # Assert that we recived the correct message
     assert len(out.intersections) == 1, 'Wrong number of detections'
+    assert len(out.ellipses) == 1, 'Wrong number of detections'
+    assert len(out.segments) == 1, 'Wrong number of detections'
     assert out.header.stamp == inp.header.stamp, 'Time stamp got changed by the ipm'
     assert out.header.frame_id == 'base_footprint', \
         'Output frame is not "base_footprint"'
