@@ -9,6 +9,9 @@ soccer_ipm:
     obstacles:
       footpoint_out_of_image_threshold: 0.8
 
+    robots:
+      footpoint_out_of_image_threshold: 0.8
+
     masks:
       line_mask:
         scale: 0.25
