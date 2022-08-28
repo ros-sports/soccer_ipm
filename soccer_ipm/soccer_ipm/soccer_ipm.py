@@ -1,6 +1,6 @@
 import cv2
 from cv_bridge import CvBridge
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Vector3
 from ipm_interfaces.msg import PlaneStamped, Point2DStamped
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
@@ -99,6 +99,7 @@ class SoccerIPM(Node):
         balls_relative.header.stamp = msg.header.stamp
         balls_relative.header.frame_id = self._output_frame
 
+        ball: sv2dm.Ball
         for ball in msg.balls:
             ball_point = Point2DStamped(
                 header=msg.header,
@@ -131,6 +132,7 @@ class SoccerIPM(Node):
         goalposts_relative_msg.header.frame_id = self._output_frame
 
         # Transform goal posts
+        goal_post_in_image: sv2dm.Goalpost
         for goal_post_in_image in msg.posts:
             # Check if post is not going out of the image at the bottom
             if not self._object_at_bottom_of_image(
@@ -172,6 +174,7 @@ class SoccerIPM(Node):
         robots.header.stamp = msg.header.stamp
         robots.header.frame_id = self._output_frame
 
+        robot: sv2dm.Robot
         for robot in msg.robots:
 
             # Check if post is not going out of the image at the bottom
@@ -247,6 +250,146 @@ class SoccerIPM(Node):
                         throttle_duration_sec=5)
 
         self.obstacles_pub.publish(obstacles)
+
+    def callback_markings(self, msg: sv2dm.MarkingArray):
+        field = self.get_field(msg.header.stamp, 0.0)
+
+        markings = sv3dm.MarkingArray()
+        markings.header.stamp = msg.header.stamp
+        markings.header.frame_id = self._output_frame
+
+        ######################
+        # Line intersections #
+        ######################
+
+        intersection: sv2dm.MarkingIntersection
+        for intersection in msg.intersections:
+                # Create center point
+                center = Point2DStamped(
+                    header=msg.header,
+                    point=intersection.center
+                )
+                # Map point from image onto field plane
+                try:
+                    mapped_center_point = self.ipm.map_point(
+                        field,
+                        center,
+                        output_frame=self._output_frame)
+                    mapped_intersection = sv3dm.MarkingIntersection()
+                    mapped_intersection.center = mapped_center_point.point
+                    mapped_intersection.confidence = intersection.confidence
+                    mapped_intersection.num_rays = intersection.num_rays
+
+                    # Project rays
+                    for ray in intersection.heading_rays:
+                        # Create heading vector in image space
+                        ray_vector = np.array([np.sin(ray), np.cos(ray)])
+                        # Add heading vector to the center of the marking in image space
+                        ray_end_point = center + ray_vector
+                        # Map newly optained end point of the ray
+                        mapped_ray_end = self.ipm.map_point(
+                            field,
+                            ray_end_point,
+                            output_frame=self._output_frame)
+                        # Substract the center point from the ray end point to get the vector
+                        ray_mapped = Vector3(
+                            x = mapped_ray_end.point.x - mapped_center_point.point.x,
+                            y = mapped_ray_end.point.y - mapped_center_point.point.y,
+                            z = mapped_ray_end.point.z - mapped_center_point.point.z
+                        )
+                        mapped_intersection.rays.append(ray_mapped)
+                    markings.intersections.append(mapped_intersection)
+                except NoIntersectionError:
+                    self.get_logger().warn(
+                        'Got a obstacle with foot point ({},{}) I could not transform.'.format(
+                            mapped_center_point.point.x,
+                            mapped_center_point.point.y),
+                        throttle_duration_sec=5)
+
+        #################
+        # Line Segments #
+        #################
+
+        # Convert segment start and end points to np array
+        segment_points_np = np.array([(
+            (segment.start.x, segment.start.y),
+            (segment.end.x, segment.end.y)) for segment in msg.segments])
+
+        # Map all points at once from image onto field plane
+        segments_on_plane = self.ipm.map_points(
+            field,
+            segment_points_np.reshape(-1, 2),
+            msg.header,
+            output_frame=self._output_frame).reshape(-1, 2, 3)
+
+        for i, segment in enumerate(segments_on_plane):
+            # Check if any of the points failed to map
+            if np.any(np.is_nan(segment)):
+                self.get_logger().warn(
+                    'Got a segment I could not transform.',
+                    throttle_duration_sec=5)
+                continue
+            start, end = segment
+            segment_msg = sv3dm.MarkingSegment()
+            # Get confidence value from original list
+            segment_msg.confidence.confidence = msg.segments[i].confidence.confidence
+            # Convert np array -> Point
+            segment_msg.start.x = start[0]
+            segment_msg.start.y = start[1]
+            segment_msg.start.z = start[2]
+            segment_msg.end.x = end[0]
+            segment_msg.end.y = end[1]
+            segment_msg.end.z = end[2]
+            markings.segments.append(segment_msg)
+
+        ###################
+        # Marking ellipse #
+        ###################
+
+        ellipse: sv2dm.MarkingEllipse
+        for ellipse in msg.ellipses:
+            # Create center point
+            center = Point2DStamped(
+                header=msg.header,
+                point=ellipse.center
+            )
+
+            # TODO check math
+            diff = ellipse.bb.center.x - ellipse.center.x
+            radius = ellipse.bb.size_x // 2 + diff
+            side_point = center.copy()
+            side_point.x += radius
+
+            # Map point from image onto field plane
+            try:
+                mapped_center_point = self.ipm.map_point(
+                    field,
+                    center,
+                    output_frame=self._output_frame)
+                mapped_side_point = self.ipm.map_point(
+                    field,
+                    side_point,
+                    output_frame=self._output_frame)
+                mapped_ellipse = sv3dm.MarkingEllipse()
+                mapped_ellipse.center = mapped_center_point.point
+                mapped_ellipse.confidence.confidence = ellipse.confidence.confidence
+                radius = np.linalg.norm(
+                    [
+                        mapped_center_point.point.x - mapped_side_point.point.x,
+                        mapped_center_point.point.y - mapped_side_point.point.y,
+                        mapped_center_point.point.z - mapped_side_point.point.z,
+                    ]
+                )
+                mapped_ellipse.diameter = 2 * radius
+                markings.ellipses.append(mapped_ellipse)
+            except NoIntersectionError:
+                self.get_logger().warn(
+                    'Got an ellipse with center point ({},{}) I could not transform.'.format(
+                        ellipse.center.x,
+                        ellipse.center.x),
+                    throttle_duration_sec=5)
+
+        self.obstacles_pub.publish(markings) # TODO
 
     def callback_field_boundary(self, msg: sv2dm.FieldBoundary):
         field = self.get_field(msg.header.stamp, 0.0)
