@@ -7,13 +7,13 @@ from vision_msgs.msg import BoundingBox2D, Point2D
 def create_field_plane(
         time: Time,
         output_frame: str,
-        heigh_offset: float = 0.0):
+        height_offset: float = 0.0):
     """Create a plane message for a given frame at a given time, with a given height offset."""
     plane = PlaneStamped()
     plane.header.frame_id = output_frame
     plane.header.stamp = time
     plane.plane.coef[2] = 1.0  # Normal in z direction
-    plane.plane.coef[3] = -heigh_offset  # Distance above the ground
+    plane.plane.coef[3] = -height_offset  # Distance above the ground
     return plane
 
 
