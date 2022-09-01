@@ -373,4 +373,43 @@ def test_ipm_markings():
     assert out.header.frame_id == 'base_footprint', \
         'Output frame is not "base_footprint"'
 
-    # TODO more tests
+    mapped_ellipse: sv3dm.MarkingEllipse = out.ellipses[0]
+    mapped_intersection: sv3dm.MarkingIntersection = out.intersections[0]
+    mapped_segment: sv3dm.MarkingSegment = out.segments[0]
+
+    assert math.isclose(mapped_ellipse.center.position.x, 0), 'Ellipse X position off'
+    assert math.isclose(mapped_ellipse.center.position.y, 0), 'Ellipse Y position off'
+    assert math.isclose(
+        mapped_ellipse.confidence.confidence,
+        inp.ellipses[0].confidence.confidence, abs_tol=1e-5), 'Confidence is off'
+    assert math.isclose(mapped_ellipse.diameter, 0.035857145, abs_tol=1e-5), 'Diameter is wrong'
+
+    assert math.isclose(mapped_segment.start.x, 0), 'Segment X position off'
+    assert math.isclose(mapped_segment.start.y, 0), 'Segment Y position off'
+    assert math.isclose(
+        mapped_segment.confidence.confidence,
+        inp.segments[0].confidence.confidence, abs_tol=1e-5), "Confidence is off"
+
+    assert math.isclose(mapped_intersection.center.x, 0), 'Intersection X position off'
+    assert math.isclose(mapped_intersection.center.y, 0), 'Intersection Y position off'
+    assert mapped_intersection.num_rays == inp.intersections[0].num_rays, \
+        'Wrong number of rays in intersection'
+
+    heading_vectors = np.array([(
+            heading_vector.x,
+            heading_vector.y,
+            heading_vector.z
+        ) for heading_vector in mapped_intersection.rays])
+
+    # Normalize vectors to length 1
+    heading_vectors /= np.linalg.norm(heading_vectors, axis=1)
+
+    # Check relationships between the rays
+    assert math.isclose(np.dot(*heading_vectors[[0, 1]]), -1), \
+        'Ray one and two are not in opposite directions'
+    assert math.isclose(np.dot(*heading_vectors[[0, 2]]), 0), \
+        'Ray one and three are not orthogonal'
+
+    common_normal = np.cross(*heading_vectors[[0, 2]])
+    assert math.isclose(np.dot(common_normal, heading_vectors[1]), 0), \
+        'Not all rays are on the same plane'
