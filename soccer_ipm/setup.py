@@ -14,8 +14,6 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/config',
             glob.glob('config/*.yaml')),
-        ('share/' + package_name + '/launch',
-            glob.glob('launch/*.launch')),
 
     ],
     install_requires=['setuptools'],
