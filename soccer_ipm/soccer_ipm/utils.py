@@ -51,4 +51,4 @@ def bb_footpoint(bounding_box: BoundingBox2D) -> Point2D:
 
 def compose(f, g):
     """Composes two functions into a new one."""
-    return lambda *a, **kw: f(g(*a, **kw))
+    return lambda *args, **kwargs: f(g(*args, **kwargs))
