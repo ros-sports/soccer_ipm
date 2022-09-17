@@ -3,7 +3,7 @@
 <package format="3">
   <name>soccer_ipm</name>
   <version>0.0.0</version>
-  <description>Inverse perspctive mapping for the RoboCup soccer environment</description>
+  <description>Inverse perspective mapping for the RoboCup soccer environment</description>
   <maintainer email="florian@flova.de">Florian Vahl</maintainer>
   <license>Apache License 2.0</license>
 
