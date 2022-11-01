@@ -56,8 +56,3 @@ def bb_footpoint(bounding_box: BoundingBox2D) -> Point2D:
         x=float(bounding_box.center.position.x),
         y=float(bounding_box.center.position.y + bounding_box.size_y // 2),
     )
-
-
-def compose(f, g):
-    """Composes two functions into a new one."""
-    return lambda *args, **kwargs: f(g(*args, **kwargs))
