@@ -35,7 +35,7 @@ def map_obstacle_array(
     :param logger: A ros logger to display warnings etc.
     :param footpoint_out_of_image_threshold: Size of the area at the bottom of the image at which
         the object is considered to be only partially visible
-    :returns: The obstalces as 3D cartesian detections in the output_frame
+    :returns: The obstacles as 3D cartesian detections in the output_frame
     """
     field = create_horizontal_plane()
 
