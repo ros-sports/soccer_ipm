@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ipm_library.exceptions import NoIntersectionError
+from ipm_library.exceptions import CameraInfoNotSetException, NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
 from soccer_ipm.utils import create_horizontal_plane
@@ -27,7 +27,7 @@ def map_ball_array(
         logger: RcutilsLogger,
         ball_diameter: float) -> sv3dm.BallArray:
     """
-    Map a given array of 2D ball detections onto the field plane.
+    Map a given array of 2D ball detections onto the ground plane.
 
     :param msg: The 2D message that should be mapped
     :param ipm: An instance of the IPM mapping utility
@@ -62,4 +62,7 @@ def map_ball_array(
                     ball.center.x,
                     ball.center.y),
                 throttle_duration_sec=5)
+        except CameraInfoNotSetException:
+            logger.warn('Inverse perspective mapping should be performed, \
+                but no camera info was recived yet!', throttle_duration_sec=5)
     return balls_relative

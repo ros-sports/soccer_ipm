@@ -15,7 +15,7 @@
 from typing import List
 
 from geometry_msgs.msg import Vector3
-from ipm_library.exceptions import NoIntersectionError
+from ipm_library.exceptions import CameraInfoNotSetException, NoIntersectionError
 from ipm_library.ipm import IPM
 import numpy as np
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -127,6 +127,9 @@ def map_marking_intersections(
                     mapped_center_point.point.x,
                     mapped_center_point.point.y),
                 throttle_duration_sec=5)
+        except CameraInfoNotSetException:
+            logger.warn('Inverse perspective mapping should be performed, \
+                but no camera info was recived yet!', throttle_duration_sec=5)
     return intersections_3d
 
 
@@ -246,4 +249,7 @@ def map_marking_ellipses(
                     ellipse.center.x,
                     ellipse.center.x),
                 throttle_duration_sec=5)
+        except CameraInfoNotSetException:
+            logger.warn('Inverse perspective mapping should be performed, \
+                but no camera info was recived yet!', throttle_duration_sec=5)
     return ellipses_3d
