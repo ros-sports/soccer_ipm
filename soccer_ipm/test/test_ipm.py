@@ -388,7 +388,7 @@ def test_ipm_markings():
     assert math.isclose(mapped_segment.start.y, 0), 'Segment Y position off'
     assert math.isclose(
         mapped_segment.confidence.confidence,
-        inp.segments[0].confidence.confidence, abs_tol=1e-5), "Confidence is off"
+        inp.segments[0].confidence.confidence, abs_tol=1e-5), 'Confidence is off'
 
     assert math.isclose(mapped_intersection.center.x, 0), 'Intersection X position off'
     assert math.isclose(mapped_intersection.center.y, 0), 'Intersection Y position off'
