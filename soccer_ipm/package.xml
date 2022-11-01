@@ -7,11 +7,8 @@
   <maintainer email="florian@flova.de">Florian Vahl</maintainer>
   <license>Apache License 2.0</license>
 
-  <exec_depend>cv_bridge</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>ipm_library</exec_depend>
-  <exec_depend>python3-opencv</exec_depend>
-  <exec_depend>sensor_msgs_py</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>shape_msgs</exec_depend>
   <exec_depend>soccer_vision_2d_msgs</exec_depend>

@@ -24,8 +24,4 @@ soccer_ipm:
         y: 0.2
         z: 1.0
 
-    masks:
-      line_mask:
-        scale: 0.25
-
     output_frame: 'base_footprint'

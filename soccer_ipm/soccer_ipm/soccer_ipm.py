@@ -17,12 +17,11 @@ import rclpy
 from rclpy.duration import Duration
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
-from sensor_msgs.msg import CameraInfo, Image, PointCloud2
+from sensor_msgs.msg import CameraInfo
 from soccer_ipm.msgs.ball import map_ball_array
 from soccer_ipm.msgs.field_boundary import map_field_boundary
 from soccer_ipm.msgs.goalpost import map_goalpost_array
 from soccer_ipm.msgs.markings import map_marking_array
-from soccer_ipm.msgs.mask import map_masks
 from soccer_ipm.msgs.obstacles import map_obstacle_array
 from soccer_ipm.msgs.robots import map_robot_array
 import soccer_vision_2d_msgs.msg as sv2dm
@@ -47,7 +46,6 @@ class SoccerIPM(Node):
         self.declare_parameter('goalposts.footpoint_out_of_image_threshold', 0.8)
         self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.8)
         self.declare_parameter('robots.footpoint_out_of_image_threshold', 0.8)
-        self.declare_parameter('masks.line_mask.scale', 0.0)
         self.declare_parameter('obstacles.object_default_dimensions.x', 0.2)
         self.declare_parameter('obstacles.object_default_dimensions.y', 0.2)
         self.declare_parameter('obstacles.object_default_dimensions.z', 1.0)
@@ -200,26 +198,6 @@ class SoccerIPM(Node):
             sv2dm.MarkingArray,
             'markings_in_image',
             markings_sub,
-            1)
-
-        # Masks
-        mask_publisher = self.create_publisher(PointCloud2, 'line_mask_relative_pc', 1)
-
-        def mask_sub(msg):
-            mask_publisher.publish(
-                map_masks(
-                    msg,
-                    ipm=self.ipm,
-                    output_frame=self.get_parameter('output_frame').value,
-                    logger=self.get_logger(),
-                    scale=self.get_parameter('masks.line_mask.scale').value
-                )
-            )
-
-        self.create_subscription(
-            Image,
-            'line_mask_in_image',
-            mask_sub,
             1)
 
 
