@@ -58,9 +58,7 @@ def map_ball_array(
             balls_relative.balls.append(ball_relative)
         except NoIntersectionError:
             logger.warn(
-                'Got a ball at ({},{}) I could not transform.'.format(
-                    ball.center.x,
-                    ball.center.y),
+                f'Could not transform ball at ({ball.center.x},{ball.center.y}).',
                 throttle_duration_sec=5)
         except CameraInfoNotSetException:
             logger.warn('Inverse perspective mapping should be performed, \
