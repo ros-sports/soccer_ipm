@@ -15,7 +15,7 @@
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
-from soccer_ipm.utils import (bb_footpoint, create_field_plane, object_at_bottom_of_image)
+from soccer_ipm.utils import (bb_footpoint, create_horizontal_plane, object_at_bottom_of_image)
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 
@@ -37,7 +37,7 @@ def map_obstacle_array(
         the object is considered to be only partially visible
     :returns: The obstalces as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane()
+    field = create_horizontal_plane()
 
     obstacles = sv3dm.ObstacleArray()
     obstacles.header.stamp = msg.header.stamp

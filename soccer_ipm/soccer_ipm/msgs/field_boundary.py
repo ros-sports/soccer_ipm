@@ -16,7 +16,7 @@ from geometry_msgs.msg import Point
 from ipm_library.ipm import IPM
 import numpy as np
 from rclpy.impl.rcutils_logger import RcutilsLogger
-from soccer_ipm.utils import create_field_plane
+from soccer_ipm.utils import create_horizontal_plane
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 
@@ -35,7 +35,7 @@ def map_field_boundary(
     :param logger: A ros logger to display warnings etc.
     :returns: The 3D cartesian points of the field boundary in the output_frame
     """
-    field = create_field_plane()
+    field = create_horizontal_plane()
 
     field_boundary = sv3dm.FieldBoundary()
     field_boundary.header.stamp = msg.header.stamp

@@ -19,7 +19,7 @@ import numpy as np
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs_py.point_cloud2 import create_cloud_xyz32
-from soccer_ipm.utils import create_field_plane
+from soccer_ipm.utils import create_horizontal_plane
 from std_msgs.msg import Header
 
 
@@ -41,7 +41,7 @@ def map_masks(
     :returns: The projected point cloud
     """
     # Get field plane
-    field = create_field_plane(msg.header.stamp, output_frame)
+    field = create_horizontal_plane(msg.header.stamp, output_frame)
     if field is None:
         return
 

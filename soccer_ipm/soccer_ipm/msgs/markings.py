@@ -19,7 +19,7 @@ from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 import numpy as np
 from rclpy.impl.rcutils_logger import RcutilsLogger
-from soccer_ipm.utils import create_field_plane
+from soccer_ipm.utils import create_horizontal_plane
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 from std_msgs.msg import Header
@@ -80,7 +80,7 @@ def map_marking_intersections(
     :param logger: A ros logger to display warnings etc.
     :returns: The intersections as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane()
+    field = create_horizontal_plane()
 
     intersections_3d = []
 
@@ -146,7 +146,7 @@ def map_marking_segments(
     :param logger: A ros logger to display warnings etc.
     :returns: The segments as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane()
+    field = create_horizontal_plane()
 
     # Convert segment start and end points to np array
     segment_points_np = np.array([(
@@ -201,7 +201,7 @@ def map_marking_ellipses(
     :param logger: A ros logger to display warnings etc.
     :returns: The ellipses as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane()
+    field = create_horizontal_plane()
 
     ellipses_3d = []
     ellipse: sv2dm.MarkingEllipse

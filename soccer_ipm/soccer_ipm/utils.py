@@ -17,7 +17,7 @@ from shape_msgs.msg import Plane
 from vision_msgs.msg import BoundingBox2D, Point2D
 
 
-def create_field_plane(
+def create_horizontal_plane(
         height_offset: float = 0.0) -> Plane:
     """Create a plane message for a given frame at a given time, with a given height offset."""
     plane = Plane()

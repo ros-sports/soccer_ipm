@@ -15,7 +15,7 @@
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
-from soccer_ipm.utils import create_field_plane
+from soccer_ipm.utils import create_horizontal_plane
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 
@@ -36,7 +36,7 @@ def map_ball_array(
     :param ball_diameter: The diameter of the balls that are mapped
     :returns: The balls as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane(ball_diameter / 2)
+    elevated_field = create_horizontal_plane(ball_diameter / 2)
 
     balls_relative = sv3dm.BallArray()
     balls_relative.header.stamp = msg.header.stamp
@@ -46,7 +46,7 @@ def map_ball_array(
     for ball in msg.balls:
         try:
             transformed_ball = ipm.map_point(
-                field,
+                elevated_field,
                 ball.center,
                 msg.header.stamp,
                 plane_frame_id=output_frame,
