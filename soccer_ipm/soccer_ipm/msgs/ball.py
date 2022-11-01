@@ -1,4 +1,17 @@
-from ipm_interfaces.msg import Point2DStamped
+# Copyright (c) 2022 Hamburg Bit-Bots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -23,7 +36,7 @@ def map_ball_array(
     :param ball_diameter: The diameter of the balls that are mapped
     :returns: The balls as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane(msg.header.stamp, output_frame, ball_diameter / 2)
+    field = create_field_plane(ball_diameter / 2)
 
     balls_relative = sv3dm.BallArray()
     balls_relative.header.stamp = msg.header.stamp
@@ -31,14 +44,13 @@ def map_ball_array(
 
     ball: sv2dm.Ball
     for ball in msg.balls:
-        ball_point = Point2DStamped(
-            header=msg.header,
-            point=ball.center)
         try:
             transformed_ball = ipm.map_point(
                 field,
-                ball_point,
-                output_frame=output_frame)
+                ball.center,
+                msg.header.stamp,
+                plane_frame_id=output_frame,
+                output_frame_id=output_frame)
 
             ball_relative = sv3dm.Ball()
             ball_relative.center = transformed_ball.point

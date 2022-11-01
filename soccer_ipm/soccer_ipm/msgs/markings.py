@@ -1,7 +1,20 @@
+# Copyright (c) 2022 Hamburg Bit-Bots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import List
 
 from geometry_msgs.msg import Vector3
-from ipm_interfaces.msg import Point2DStamped
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 import numpy as np
@@ -67,23 +80,20 @@ def map_marking_intersections(
     :param logger: A ros logger to display warnings etc.
     :returns: The intersections as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane(header.stamp, output_frame)
+    field = create_field_plane()
 
     intersections_3d = []
 
     intersection: sv2dm.MarkingIntersection
     for intersection in intersections_2d:
-        # Create center point
-        center = Point2DStamped(
-            header=header,
-            point=intersection.center
-        )
         # Map point from image onto field plane
         try:
             mapped_center_point = ipm.map_point(
                 field,
-                center,
-                output_frame=output_frame)
+                intersection.center,
+                header.stamp,
+                plane_frame_id=output_frame,
+                output_frame_id=output_frame)
             mapped_intersection = sv3dm.MarkingIntersection()
             mapped_intersection.center = mapped_center_point.point
             mapped_intersection.confidence = intersection.confidence
@@ -92,17 +102,17 @@ def map_marking_intersections(
             # Project rays
             for ray in intersection.heading_rays:
                 # Create center point offset by the heading vector in image space
-                ray_end_point = Point2DStamped(
-                    header=header,
-                    point=Point2D(
-                        x=center.point.x + np.sin(ray),
-                        y=center.point.y + np.cos(ray))
-                    )
+                ray_end_point = Point2D(
+                    x=intersection.center.x + np.sin(ray),
+                    y=intersection.center.y + np.cos(ray)
+                )
                 # Map newly optained end point of the ray
                 mapped_ray_end = ipm.map_point(
                     field,
                     ray_end_point,
-                    output_frame=output_frame)
+                    header.stamp,
+                    plane_frame_id=output_frame,
+                    output_frame_id=output_frame)
                 # Substract the center point from the ray end point to get the vector
                 ray_mapped = Vector3(
                     x=mapped_ray_end.point.x - mapped_center_point.point.x,
@@ -136,7 +146,7 @@ def map_marking_segments(
     :param logger: A ros logger to display warnings etc.
     :returns: The segments as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane(header.stamp, output_frame)
+    field = create_field_plane()
 
     # Convert segment start and end points to np array
     segment_points_np = np.array([(
@@ -147,8 +157,9 @@ def map_marking_segments(
     segments_on_plane = ipm.map_points(
         field,
         segment_points_np.reshape(-1, 2),
-        header,
-        output_frame=output_frame).reshape(-1, 2, 3)
+        header.stamp,
+        plane_frame_id=output_frame,
+        output_frame_id=output_frame)[1].reshape(-1, 2, 3)
 
     # Convert the numpy array back to the soccer vision messages datatype
     marking_segments_3d = []
@@ -190,38 +201,33 @@ def map_marking_ellipses(
     :param logger: A ros logger to display warnings etc.
     :returns: The ellipses as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane(header.stamp, output_frame)
+    field = create_field_plane()
 
     ellipses_3d = []
     ellipse: sv2dm.MarkingEllipse
     for ellipse in ellipses_2d:
-        # Create center point
-        center = Point2DStamped(
-            header=header,
-            point=ellipse.center
-        )
-
         # TODO check math
         diff = ellipse.bb.center.position.x - ellipse.center.x
         radius = ellipse.bb.size_x // 2 + diff
-        side_point = Point2DStamped(
-            header=header,
-            point=Point2D(
-                x=ellipse.center.x + radius,
-                y=ellipse.center.y
-            )
+        side_point = Point2D(
+            x=ellipse.center.x + radius,
+            y=ellipse.center.y
         )
 
         # Map point from image onto field plane
         try:
             mapped_center_point = ipm.map_point(
                 field,
-                center,
-                output_frame=output_frame)
+                ellipse.center,
+                header.stamp,
+                plane_frame_id=output_frame,
+                output_frame_id=output_frame)
             mapped_side_point = ipm.map_point(
                 field,
                 side_point,
-                output_frame=output_frame)
+                header.stamp,
+                plane_frame_id=output_frame,
+                output_frame_id=output_frame)
             mapped_ellipse = sv3dm.MarkingEllipse()
             mapped_ellipse.center.position = mapped_center_point.point
             mapped_ellipse.confidence.confidence = ellipse.confidence.confidence

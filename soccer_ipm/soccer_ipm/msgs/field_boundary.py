@@ -1,3 +1,17 @@
+# Copyright (c) 2022 Hamburg Bit-Bots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from geometry_msgs.msg import Point
 from ipm_library.ipm import IPM
 import numpy as np
@@ -21,7 +35,7 @@ def map_field_boundary(
     :param logger: A ros logger to display warnings etc.
     :returns: The 3D cartesian points of the field boundary in the output_frame
     """
-    field = create_field_plane(msg.header.stamp, output_frame)
+    field = create_field_plane()
 
     field_boundary = sv3dm.FieldBoundary()
     field_boundary.header.stamp = msg.header.stamp
@@ -35,8 +49,9 @@ def map_field_boundary(
     points_on_plane = ipm.map_points(
         field,
         points_np,
-        msg.header,
-        output_frame=output_frame)
+        msg.header.stamp,
+        plane_frame_id=output_frame,
+        output_frame_id=output_frame)[1]
 
     # Check for invalid field boundary points and convert back from numpy
     for p in points_on_plane:

@@ -1,4 +1,17 @@
-from ipm_interfaces.msg import Point2DStamped
+# Copyright (c) 2022 Hamburg Bit-Bots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -24,7 +37,7 @@ def map_robot_array(
         the object is considered to be only partially visible
     :returns: The robots as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane(msg.header.stamp, output_frame)
+    field = create_field_plane()
 
     robots = sv3dm.RobotArray()
     robots.header.stamp = msg.header.stamp
@@ -39,16 +52,15 @@ def map_robot_array(
                 bb_footpoint(robot.bb).y,
                 footpoint_out_of_image_threshold):
             # Create footpoint
-            footpoint = Point2DStamped(
-                header=msg.header,
-                point=bb_footpoint(robot.bb)
-            )
+            footpoint = bb_footpoint(robot.bb)
             # Map point from image onto field plane
             try:
                 relative_foot_point = ipm.map_point(
                     field,
                     footpoint,
-                    output_frame=output_frame)
+                    msg.header.stamp,
+                    plane_frame_id=output_frame,
+                    output_frame_id=output_frame)
 
                 transformed_robot = sv3dm.Robot()
                 transformed_robot.attributes = robot.attributes
@@ -61,7 +73,7 @@ def map_robot_array(
             except NoIntersectionError:
                 logger.warn(
                     'Got a robot with foot point ({},{}) I could not transform.'.format(
-                        footpoint.point.x,
-                        footpoint.point.y),
+                        footpoint.x,
+                        footpoint.y),
                     throttle_duration_sec=5)
     return robots

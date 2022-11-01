@@ -1,19 +1,28 @@
-from builtin_interfaces.msg import Time
-from ipm_interfaces.msg import PlaneStamped
+# Copyright (c) 2022 Hamburg Bit-Bots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from sensor_msgs.msg import CameraInfo
+from shape_msgs.msg import Plane
 from vision_msgs.msg import BoundingBox2D, Point2D
 
 
 def create_field_plane(
-        time: Time,
-        output_frame: str,
-        height_offset: float = 0.0):
+        height_offset: float = 0.0) -> Plane:
     """Create a plane message for a given frame at a given time, with a given height offset."""
-    plane = PlaneStamped()
-    plane.header.frame_id = output_frame
-    plane.header.stamp = time
-    plane.plane.coef[2] = 1.0  # Normal in z direction
-    plane.plane.coef[3] = -height_offset  # Distance above the ground
+    plane = Plane()
+    plane.coef[2] = 1.0  # Normal in z direction
+    plane.coef[3] = -height_offset  # Distance above the ground
     return plane
 
 

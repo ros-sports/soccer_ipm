@@ -1,4 +1,17 @@
-from ipm_interfaces.msg import Point2DStamped
+# Copyright (c) 2022 Hamburg Bit-Bots
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -24,7 +37,7 @@ def map_goalpost_array(
         the object is considered to be only partially visible
     :returns: The posts as 3D cartesian detections in the output_frame
     """
-    field = create_field_plane(msg.header.stamp, output_frame)
+    field = create_field_plane()
 
     # Create new message
     goalposts_relative_msg = sv3dm.GoalpostArray()
@@ -36,21 +49,19 @@ def map_goalpost_array(
     for goal_post_in_image in msg.posts:
         # Check if post is not going out of the image at the bottom
         ipm.get_camera_info()
+        footpoint = bb_footpoint(goal_post_in_image.bb)
         if not object_at_bottom_of_image(
                 ipm.get_camera_info(),
-                bb_footpoint(goal_post_in_image.bb).y,
+                footpoint.y,
                 footpoint_out_of_image_threshold):
-            # Create footpoint
-            footpoint = Point2DStamped(
-                header=msg.header,
-                point=bb_footpoint(goal_post_in_image.bb)
-            )
             # Map point from image onto field plane
             try:
                 relative_foot_point = ipm.map_point(
                     field,
                     footpoint,
-                    output_frame=output_frame)
+                    msg.header.stamp,
+                    plane_frame_id=output_frame,
+                    output_frame_id=output_frame)
 
                 post_relative = sv3dm.Goalpost()
                 post_relative.attributes = goal_post_in_image.attributes
@@ -63,7 +74,7 @@ def map_goalpost_array(
             except NoIntersectionError:
                 logger.warn(
                     'Got a post with foot point ({},{}) I could not transform.'.format(
-                        footpoint.point.x,
-                        footpoint.point.y),
+                        footpoint.x,
+                        footpoint.y),
                     throttle_duration_sec=5)
     return goalposts_relative_msg
