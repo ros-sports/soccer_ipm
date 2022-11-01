@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Tuple
+
 from ipm_library.exceptions import CameraInfoNotSetException, NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -25,7 +27,8 @@ def map_goalpost_array(
         ipm: IPM,
         output_frame: str,
         logger: RcutilsLogger,
-        footpoint_out_of_image_threshold: float) -> sv3dm.GoalpostArray:
+        footpoint_out_of_image_threshold: float,
+        object_default_dimensions: Tuple[float, float, float]) -> sv3dm.GoalpostArray:
     """
     Map a given array of 2D goal post detections onto the field plane.
 
@@ -35,6 +38,7 @@ def map_goalpost_array(
     :param logger: A ros logger to display warnings etc.
     :param footpoint_out_of_image_threshold: Size of the area at the bottom of the image at which
         the object is considered to be only partially visible
+    :param object_default_dimensions: Default dimensions of the 3D objects
     :returns: The posts as 3D cartesian detections in the output_frame
     """
     field = create_horizontal_plane()
@@ -66,9 +70,9 @@ def map_goalpost_array(
                 post_relative = sv3dm.Goalpost()
                 post_relative.attributes = goal_post_in_image.attributes
                 post_relative.bb.center.position = relative_foot_point.point
-                post_relative.bb.size.x = 0.1  # TODO better size estimation
-                post_relative.bb.size.y = 0.1  # TODO better size estimation
-                post_relative.bb.size.z = 1.5  # TODO better size estimation
+                post_relative.bb.size.x = object_default_dimensions[0]
+                post_relative.bb.size.y = object_default_dimensions[1]
+                post_relative.bb.size.z = object_default_dimensions[2]
                 post_relative.confidence = goal_post_in_image.confidence
                 goalposts_relative_msg.posts.append(post_relative)
             except NoIntersectionError:

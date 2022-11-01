@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Tuple
+
 from ipm_library.exceptions import CameraInfoNotSetException, NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -25,7 +27,8 @@ def map_robot_array(
         ipm: IPM,
         output_frame: str,
         logger: RcutilsLogger,
-        footpoint_out_of_image_threshold: float) -> sv3dm.RobotArray:
+        footpoint_out_of_image_threshold: float,
+        object_default_dimensions: Tuple[float, float, float]) -> sv3dm.RobotArray:
     """
     Map a given array of 2D goal robot detections onto the field plane.
 
@@ -35,6 +38,7 @@ def map_robot_array(
     :param logger: A ros logger to display warnings etc.
     :param footpoint_out_of_image_threshold: Size of the area at the bottom of the image at which
         the object is considered to be only partially visible
+    :param object_default_dimensions: Default dimensions of the 3D objects
     :returns: The robots as 3D cartesian detections in the output_frame
     """
     field = create_horizontal_plane()
@@ -66,9 +70,9 @@ def map_robot_array(
                 transformed_robot.attributes = robot.attributes
                 transformed_robot.confidence = robot.confidence
                 transformed_robot.bb.center.position = relative_foot_point.point
-                transformed_robot.bb.size.x = 0.3   # TODO better size estimation
-                transformed_robot.bb.size.y = 0.3   # TODO better size estimation
-                transformed_robot.bb.size.z = 0.5   # TODO better size estimation
+                transformed_robot.bb.size.x = object_default_dimensions[0]
+                transformed_robot.bb.size.y = object_default_dimensions[1]
+                transformed_robot.bb.size.z = object_default_dimensions[2]
                 robots.robots.append(transformed_robot)
             except NoIntersectionError:
                 logger.warn(

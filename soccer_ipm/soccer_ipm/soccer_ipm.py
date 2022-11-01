@@ -51,6 +51,15 @@ class SoccerIPM(Node):
         self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.8)
         self.declare_parameter('robots.footpoint_out_of_image_threshold', 0.8)
         self.declare_parameter('masks.line_mask.scale', 0.0)
+        self.declare_parameter('obstacles.object_default_dimensions.x', 0.2)
+        self.declare_parameter('obstacles.object_default_dimensions.y', 0.2)
+        self.declare_parameter('obstacles.object_default_dimensions.z', 1.0)
+        self.declare_parameter('robots.object_default_dimensions.x', 0.2)
+        self.declare_parameter('robots.object_default_dimensions.y', 0.2)
+        self.declare_parameter('robots.object_default_dimensions.z', 1.0)
+        self.declare_parameter('goalposts.object_default_dimensions.x', 0.1)
+        self.declare_parameter('goalposts.object_default_dimensions.y', 0.1)
+        self.declare_parameter('goalposts.object_default_dimensions.z', 1.0)
 
         # Subscribe to camera info
         self.create_subscription(CameraInfo, 'camera_info', self.ipm.set_camera_info, 1)
@@ -84,7 +93,12 @@ class SoccerIPM(Node):
                     output_frame=self.get_parameter('output_frame').value,
                     logger=self.get_logger(),
                     footpoint_out_of_image_threshold=self.get_parameter(
-                        'obstacles.footpoint_out_of_image_threshold').value),
+                        'goalposts.footpoint_out_of_image_threshold').value,
+                    object_default_dimensions=(
+                        self.get_parameter('goalposts.object_default_dimensions.x').value,
+                        self.get_parameter('goalposts.object_default_dimensions.y').value,
+                        self.get_parameter('goalposts.object_default_dimensions.z').value
+                    )),
                 ),
             1)
 
@@ -100,7 +114,12 @@ class SoccerIPM(Node):
                     output_frame=self.get_parameter('output_frame').value,
                     logger=self.get_logger(),
                     footpoint_out_of_image_threshold=self.get_parameter(
-                        'robots.footpoint_out_of_image_threshold').value),
+                        'robots.footpoint_out_of_image_threshold').value,
+                    object_default_dimensions=(
+                        self.get_parameter('robots.object_default_dimensions.x').value,
+                        self.get_parameter('robots.object_default_dimensions.y').value,
+                        self.get_parameter('robots.object_default_dimensions.z').value
+                    )),
                 ),
             1)
 
@@ -116,7 +135,12 @@ class SoccerIPM(Node):
                     output_frame=self.get_parameter('output_frame').value,
                     logger=self.get_logger(),
                     footpoint_out_of_image_threshold=self.get_parameter(
-                        'obstacles.footpoint_out_of_image_threshold').value),
+                        'obstacles.footpoint_out_of_image_threshold').value,
+                    object_default_dimensions=(
+                        self.get_parameter('obstacles.object_default_dimensions.x').value,
+                        self.get_parameter('obstacles.object_default_dimensions.y').value,
+                        self.get_parameter('obstacles.object_default_dimensions.z').value
+                    )),
                 ),
             1)
 
