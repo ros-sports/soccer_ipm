@@ -209,7 +209,6 @@ def map_marking_ellipses(
     ellipses_3d = []
     ellipse: sv2dm.MarkingEllipse
     for ellipse in ellipses_2d:
-        # TODO check math
         diff = ellipse.bb.center.position.x - ellipse.center.x
         radius = ellipse.bb.size_x // 2 + diff
         side_point = Point2D(
