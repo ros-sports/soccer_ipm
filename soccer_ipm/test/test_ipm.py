@@ -21,6 +21,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo
 from soccer_ipm.soccer_ipm import SoccerIPM
+from soccer_ipm.utils import object_at_bottom_of_image
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 import soccer_vision_attribute_msgs.msg as sva
@@ -413,3 +414,13 @@ def test_ipm_markings():
     common_normal = np.cross(*heading_vectors[[0, 2]])
     assert math.isclose(np.dot(common_normal, heading_vectors[1]), 0), \
         'Not all rays are on the same plane'
+
+
+def test_out_of_image():
+    bottom = camera_info.height / camera_info.binning_y
+    assert not object_at_bottom_of_image(camera_info, -1.0, img_center_y)
+    assert not object_at_bottom_of_image(camera_info, 0.0, 1.0)
+    assert not object_at_bottom_of_image(camera_info, bottom - 1, 1.0)
+    assert not object_at_bottom_of_image(camera_info, bottom, 1.0)
+    assert object_at_bottom_of_image(camera_info, bottom + 1, 1.0)
+    assert object_at_bottom_of_image(camera_info, bottom, 0.5)
