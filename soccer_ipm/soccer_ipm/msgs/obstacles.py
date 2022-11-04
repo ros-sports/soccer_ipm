@@ -30,7 +30,7 @@ def map_obstacle_array(
         footpoint_out_of_image_threshold: float,
         object_default_dimensions: Tuple[float, float, float]) -> sv3dm.ObstacleArray:
     """
-    Map a given array of 2D goal obstacle detections onto the field plane.
+    Map a given array of 2D obstacle detections onto the field plane.
 
     :param msg: The 2D message that should be mapped
     :param ipm: An instance of the IPM mapping utility
