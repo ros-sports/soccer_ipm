@@ -30,7 +30,7 @@ def map_robot_array(
         footpoint_out_of_image_threshold: float,
         object_default_dimensions: Tuple[float, float, float]) -> sv3dm.RobotArray:
     """
-    Map a given array of 2D goal robot detections onto the field plane.
+    Map a given array of 2D robot detections onto the field plane.
 
     :param msg: The 2D message that should be mapped
     :param ipm: An instance of the IPM mapping utility
