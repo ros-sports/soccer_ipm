@@ -67,10 +67,11 @@ def map_obstacle_array(
                     output_frame_id=output_frame)
                 transformed_obstacle = sv3dm.Obstacle()
                 transformed_obstacle.confidence = obstacle.confidence
-                transformed_obstacle.bb.center.position = relative_foot_point.point
                 transformed_obstacle.bb.size.x = object_default_dimensions[0]
                 transformed_obstacle.bb.size.y = object_default_dimensions[1]
                 transformed_obstacle.bb.size.z = object_default_dimensions[2]
+                transformed_obstacle.bb.center.position = relative_foot_point.point
+                transformed_obstacle.bb.center.position.z += transformed_obstacle.bb.size.z / 2
                 obstacles.obstacles.append(transformed_obstacle)
             except NoIntersectionError:
                 logger.warn(

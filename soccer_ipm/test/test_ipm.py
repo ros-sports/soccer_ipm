@@ -213,7 +213,7 @@ def test_ipm_goalposts():
             goalpost_relative.bb.center.position.y,
             goalpost_relative.bb.center.position.z
         ],
-        [0.0, 0.0, 0.0])
+        [0.0, 0.0, 0.5])
 
 
 def test_ipm_robots():
@@ -253,7 +253,7 @@ def test_ipm_robots():
             robot_relative.bb.center.position.y,
             robot_relative.bb.center.position.z
         ],
-        [0.0, 0.0, 0.0])
+        [0.0, 0.0, 0.5])
 
 
 def test_ipm_obstacles():
@@ -289,7 +289,7 @@ def test_ipm_obstacles():
             obstacle_relative.bb.center.position.y,
             obstacle_relative.bb.center.position.z
         ],
-        [0.0, 0.0, 0.0])
+        [0.0, 0.0, 0.5])
 
 
 def test_ipm_field_boundary():
