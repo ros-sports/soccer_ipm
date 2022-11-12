@@ -269,7 +269,7 @@ def test_ipm_obstacles():
 
     out, inp = standard_ipm_test_case(
         sv2dm.ObstacleArray,
-        'obstalces_in_image',
+        'obstacles_in_image',
         obstacle_detections,
         sv3dm.ObstacleArray,
         'obstacles_relative')

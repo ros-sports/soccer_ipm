@@ -155,7 +155,7 @@ class SoccerIPM(Node):
 
         self.create_subscription(
             sv2dm.ObstacleArray,
-            'obstalces_in_image',
+            'obstacles_in_image',
             obstacle_sub,
             1)
 
