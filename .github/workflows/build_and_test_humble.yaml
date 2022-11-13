@@ -2,7 +2,7 @@
 
 name: Build and Test (humble)
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push
   push:
@@ -34,3 +34,4 @@ jobs:
         with:
           target-ros2-distro: humble
           vcs-repo-file-url: dependencies.repos
+          package-name: soccer_ipm
