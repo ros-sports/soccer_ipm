@@ -69,10 +69,11 @@ def map_robot_array(
                 transformed_robot = sv3dm.Robot()
                 transformed_robot.attributes = robot.attributes
                 transformed_robot.confidence = robot.confidence
-                transformed_robot.bb.center.position = relative_foot_point.point
                 transformed_robot.bb.size.x = object_default_dimensions[0]
                 transformed_robot.bb.size.y = object_default_dimensions[1]
                 transformed_robot.bb.size.z = object_default_dimensions[2]
+                transformed_robot.bb.center.position = relative_foot_point.point
+                transformed_robot.bb.center.position.z += transformed_robot.bb.size.z / 2
                 robots.robots.append(transformed_robot)
             except NoIntersectionError:
                 logger.warn(

@@ -69,10 +69,11 @@ def map_goalpost_array(
 
                 post_relative = sv3dm.Goalpost()
                 post_relative.attributes = goal_post_in_image.attributes
-                post_relative.bb.center.position = relative_foot_point.point
                 post_relative.bb.size.x = object_default_dimensions[0]
                 post_relative.bb.size.y = object_default_dimensions[1]
                 post_relative.bb.size.z = object_default_dimensions[2]
+                post_relative.bb.center.position = relative_foot_point.point
+                post_relative.bb.center.position.z += post_relative.bb.size.z / 2
                 post_relative.confidence = goal_post_in_image.confidence
                 goalposts_relative_msg.posts.append(post_relative)
             except NoIntersectionError:
