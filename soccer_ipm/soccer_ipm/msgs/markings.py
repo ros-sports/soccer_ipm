@@ -157,12 +157,16 @@ def map_marking_segments(
         (segment.end.x, segment.end.y)) for segment in marking_segments_2d])
 
     # Map all points at once from image onto field plane
-    segments_on_plane = ipm.map_points(
-        field,
-        segment_points_np.reshape(-1, 2),
-        header.stamp,
-        plane_frame_id=output_frame,
-        output_frame_id=output_frame)[1].reshape(-1, 2, 3)
+    try:
+        segments_on_plane = ipm.map_points(
+            field,
+            segment_points_np.reshape(-1, 2),
+            header.stamp,
+            plane_frame_id=output_frame,
+            output_frame_id=output_frame)[1].reshape(-1, 2, 3)
+    except CameraInfoNotSetException:
+        logger.warn('Inverse perspective mapping should be performed, \
+                but no camera info was recived yet!', throttle_duration_sec=5)
 
     # Convert the numpy array back to the soccer vision messages datatype
     marking_segments_3d = []
