@@ -78,7 +78,9 @@ def catch_camera_info_error(logger: RcutilsLogger) -> Callable:
             try:
                 return f(*args, **kwargs)
             except CameraInfoNotSetException:
-                logger.warn('Inverse perspective mapping should be performed, ' +
-                            'but no camera info was recived yet!', throttle_duration_sec=5)
+                logger.warn(
+                    'Inverse perspective mapping should be performed, '
+                    'but no camera info was recived yet!',
+                    throttle_duration_sec=5)
         return wrapper
     return wrapped_decorator
