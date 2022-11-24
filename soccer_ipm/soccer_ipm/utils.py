@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Callable
+from functools import wraps
+
+from ipm_library.exceptions import CameraInfoNotSetException
+from rclpy.impl.rcutils_logger import RcutilsLogger
 from sensor_msgs.msg import CameraInfo
 from shape_msgs.msg import Plane
 from vision_msgs.msg import BoundingBox2D, Point2D
@@ -56,3 +61,24 @@ def bb_footpoint(bounding_box: BoundingBox2D) -> Point2D:
         x=float(bounding_box.center.position.x),
         y=float(bounding_box.center.position.y + bounding_box.size_y // 2),
     )
+
+
+def catch_camera_info_error(logger: RcutilsLogger) -> Callable:
+    """
+    Camera info exception handling decorator factory.
+
+    See also https://www.artima.com/weblogs/viewpost.jsp?thread=240845
+
+    :param logger: The rclpy logger that prints the warning
+    :returns: The decorator that utilizes the logger
+    """
+    def wrapped_decorator(f: Callable) -> Callable:
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except CameraInfoNotSetException:
+                logger.warn('Inverse perspective mapping should be performed, ' +
+                            'but no camera info was recived yet!', throttle_duration_sec=5)
+        return wrapper
+    return wrapped_decorator

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from geometry_msgs.msg import Point
-from ipm_library.exceptions import CameraInfoNotSetException
 from ipm_library.ipm import IPM
 import numpy as np
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -47,16 +46,12 @@ def map_field_boundary(
     points_np = np.array([[p.x, p.y] for p in msg.points])
 
     # Map all points at once from image onto field plane
-    try:
-        points_on_plane = ipm.map_points(
-            field,
-            points_np,
-            msg.header.stamp,
-            plane_frame_id=output_frame,
-            output_frame_id=output_frame)[1]
-    except CameraInfoNotSetException:
-        logger.warn('Inverse perspective mapping should be performed, \
-                but no camera info was recived yet!', throttle_duration_sec=5)
+    points_on_plane = ipm.map_points(
+        field,
+        points_np,
+        msg.header.stamp,
+        plane_frame_id=output_frame,
+        output_frame_id=output_frame)[1]
 
     # Check for invalid field boundary points and convert back from numpy
     for p in points_on_plane:
