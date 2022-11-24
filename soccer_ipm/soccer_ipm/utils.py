@@ -63,7 +63,7 @@ def bb_footpoint(bounding_box: BoundingBox2D) -> Point2D:
     )
 
 
-def catch_camera_info_error(logger: RcutilsLogger) -> Callable:
+def catch_camera_info_not_set_error(logger: RcutilsLogger) -> Callable:
     """
     Camera info exception handling decorator factory.
 
