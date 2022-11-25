@@ -14,7 +14,7 @@
 
 from typing import Tuple
 
-from ipm_library.exceptions import CameraInfoNotSetException, NoIntersectionError
+from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
 from soccer_ipm.utils import (bb_footpoint, create_horizontal_plane, object_at_bottom_of_image)
@@ -81,7 +81,4 @@ def map_robot_array(
                         footpoint.x,
                         footpoint.y),
                     throttle_duration_sec=5)
-            except CameraInfoNotSetException:
-                logger.warn('Inverse perspective mapping should be performed, \
-                    but no camera info was recived yet!', throttle_duration_sec=5)
     return robots

@@ -24,6 +24,7 @@ from soccer_ipm.msgs.goalpost import map_goalpost_array
 from soccer_ipm.msgs.markings import map_marking_array
 from soccer_ipm.msgs.obstacles import map_obstacle_array
 from soccer_ipm.msgs.robots import map_robot_array
+from soccer_ipm.utils import catch_camera_info_not_set_error
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
 import tf2_ros as tf2
@@ -64,6 +65,7 @@ class SoccerIPM(Node):
         # Balls
         ball_publisher = self.create_publisher(sv3dm.BallArray, 'balls_relative', 1)
 
+        @catch_camera_info_not_set_error(self.get_logger())
         def ball_sub(msg):
             ball_publisher.publish(
                 map_ball_array(
@@ -84,6 +86,7 @@ class SoccerIPM(Node):
         # Goal posts
         goalpost_publisher = self.create_publisher(sv3dm.GoalpostArray, 'goal_posts_relative', 1)
 
+        @catch_camera_info_not_set_error(self.get_logger())
         def goalpost_pub(msg):
             goalpost_publisher.publish(
                 map_goalpost_array(
@@ -110,6 +113,7 @@ class SoccerIPM(Node):
         # Robots
         robot_publisher = self.create_publisher(sv3dm.RobotArray, 'robots_relative', 1)
 
+        @catch_camera_info_not_set_error(self.get_logger())
         def robot_sub(msg):
             robot_publisher.publish(
                 map_robot_array(
@@ -136,6 +140,7 @@ class SoccerIPM(Node):
         # Obstacles
         obstacle_publisher = self.create_publisher(sv3dm.ObstacleArray, 'obstacles_relative', 1)
 
+        @catch_camera_info_not_set_error(self.get_logger())
         def obstacle_sub(msg):
             obstacle_publisher.publish(
                 map_obstacle_array(
@@ -165,6 +170,7 @@ class SoccerIPM(Node):
             'field_boundary_relative',
             1)
 
+        @catch_camera_info_not_set_error(self.get_logger())
         def field_boundary_sub(msg):
             field_boundary_publisher.publish(
                 map_field_boundary(
@@ -184,6 +190,7 @@ class SoccerIPM(Node):
         # Markings
         markings_publisher = self.create_publisher(sv3dm.MarkingArray, 'markings_relative', 1)
 
+        @catch_camera_info_not_set_error(self.get_logger())
         def markings_sub(msg):
             markings_publisher.publish(
                 map_marking_array(
