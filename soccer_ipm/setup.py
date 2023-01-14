@@ -1,5 +1,6 @@
 import glob
 
+from setuptools import find_packages
 from setuptools import setup
 
 package_name = 'soccer_ipm'
@@ -7,7 +8,7 @@ package_name = 'soccer_ipm'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name],
+    packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
