@@ -19,6 +19,7 @@ from ipm_library.exceptions import CameraInfoNotSetException
 from rclpy.impl.rcutils_logger import RcutilsLogger
 from sensor_msgs.msg import CameraInfo
 from shape_msgs.msg import Plane
+import tf2_ros as tf2
 from vision_msgs.msg import BoundingBox2D, Point2D
 
 
@@ -81,6 +82,31 @@ def catch_camera_info_not_set_error(logger: RcutilsLogger) -> Callable:
                 logger.warn(
                     'Inverse perspective mapping should be performed, '
                     'but no camera info was recived yet!',
+                    throttle_duration_sec=5)
+        return wrapper
+    return wrapped_decorator
+
+
+def catch_tf_timing_error(logger: RcutilsLogger) -> Callable:
+    """
+    Camera info exception handling decorator factory.
+
+    See also https://www.artima.com/weblogs/viewpost.jsp?thread=240845
+
+    :param logger: The rclpy logger that prints the warning
+    :returns: The decorator that utilizes the logger
+    """
+    def wrapped_decorator(f: Callable) -> Callable:
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except (tf2.ConnectivityException,
+                    tf2.LookupException,
+                    tf2.ExtrapolationException) as e:
+                logger.warn(
+                    'Inverse perspective mapping should be performed, '
+                    f'but a tf error occured: {str(e)}',
                     throttle_duration_sec=5)
         return wrapper
     return wrapped_decorator
