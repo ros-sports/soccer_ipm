@@ -89,7 +89,7 @@ def catch_camera_info_not_set_error(logger: RcutilsLogger) -> Callable:
 
 def catch_tf_timing_error(logger: RcutilsLogger) -> Callable:
     """
-    Camera info exception handling decorator factory.
+    TF exception handling decorator factory.
 
     See also https://www.artima.com/weblogs/viewpost.jsp?thread=240845
 
