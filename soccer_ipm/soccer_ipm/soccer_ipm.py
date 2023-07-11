@@ -219,6 +219,8 @@ def main(args=None):
     node = SoccerIPM()
     ex = MultiThreadedExecutor(num_threads=4)
     ex.add_node(node)
-    ex.spin()
+    try:
+        ex.spin()
+    except KeyboardInterrupt:
+        pass
     node.destroy_node()
-    rclpy.shutdown()
