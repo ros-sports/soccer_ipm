@@ -34,28 +34,29 @@ class SoccerIPM(Node):
 
     def __init__(self) -> None:
         super().__init__('soccer_ipm')
+        # Declare params
+        self.declare_parameter('balls.ball_diameter', 0.153)
+        self.declare_parameter('goalposts.footpoint_out_of_image_threshold', 0.8)
+        self.declare_parameter('goalposts.object_default_dimensions.x', 0.1)
+        self.declare_parameter('goalposts.object_default_dimensions.y', 0.1)
+        self.declare_parameter('goalposts.object_default_dimensions.z', 1.0)
+        self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.8)
+        self.declare_parameter('obstacles.object_default_dimensions.x', 0.2)
+        self.declare_parameter('obstacles.object_default_dimensions.y', 0.2)
+        self.declare_parameter('obstacles.object_default_dimensions.z', 1.0)
+        self.declare_parameter('output_frame', 'base_footprint')
+        self.declare_parameter('robots.footpoint_out_of_image_threshold', 0.8)
+        self.declare_parameter('robots.object_default_dimensions.x', 0.2)
+        self.declare_parameter('robots.object_default_dimensions.y', 0.2)
+        self.declare_parameter('robots.object_default_dimensions.z', 1.0)
+        self.declare_parameter('use_distortion', False)
+
         # We need to create a tf buffer
         self.tf_buffer = tf2.Buffer(cache_time=Duration(seconds=30.0))
         self.tf_listener = tf2.TransformListener(self.tf_buffer, self)
 
         # Create an IPM instance
-        self.ipm = IPM(self.tf_buffer)
-
-        # Declare params
-        self.declare_parameter('balls.ball_diameter', 0.153)
-        self.declare_parameter('output_frame', 'base_footprint')
-        self.declare_parameter('goalposts.footpoint_out_of_image_threshold', 0.8)
-        self.declare_parameter('obstacles.footpoint_out_of_image_threshold', 0.8)
-        self.declare_parameter('robots.footpoint_out_of_image_threshold', 0.8)
-        self.declare_parameter('obstacles.object_default_dimensions.x', 0.2)
-        self.declare_parameter('obstacles.object_default_dimensions.y', 0.2)
-        self.declare_parameter('obstacles.object_default_dimensions.z', 1.0)
-        self.declare_parameter('robots.object_default_dimensions.x', 0.2)
-        self.declare_parameter('robots.object_default_dimensions.y', 0.2)
-        self.declare_parameter('robots.object_default_dimensions.z', 1.0)
-        self.declare_parameter('goalposts.object_default_dimensions.x', 0.1)
-        self.declare_parameter('goalposts.object_default_dimensions.y', 0.1)
-        self.declare_parameter('goalposts.object_default_dimensions.z', 1.0)
+        self.ipm = IPM(self.tf_buffer, distortion=self.get_parameter('use_distortion').value)
 
         # Subscribe to camera info
         self.create_subscription(CameraInfo, 'camera_info', self.ipm.set_camera_info, 1)
