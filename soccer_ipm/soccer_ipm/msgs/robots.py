@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
-
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
 from rclpy.impl.rcutils_logger import RcutilsLogger
@@ -28,7 +26,7 @@ def map_robot_array(
         output_frame: str,
         logger: RcutilsLogger,
         footpoint_out_of_image_threshold: float,
-        object_default_dimensions: Tuple[float, float, float]) -> sv3dm.RobotArray:
+        object_default_dimensions: tuple[float, float, float]) -> sv3dm.RobotArray:
     """
     Map a given array of 2D robot detections onto the field plane.
 

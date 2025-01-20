@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
 from geometry_msgs.msg import Vector3
 from ipm_library.exceptions import NoIntersectionError
 from ipm_library.ipm import IPM
@@ -66,10 +64,10 @@ def map_marking_array(
 
 def map_marking_intersections(
         header: Header,
-        intersections_2d: List[sv2dm.MarkingIntersection],
+        intersections_2d: list[sv2dm.MarkingIntersection],
         ipm: IPM,
         output_frame: str,
-        logger: RcutilsLogger) -> List[sv3dm.MarkingIntersection]:
+        logger: RcutilsLogger) -> list[sv3dm.MarkingIntersection]:
     """
     Map a given list of 2D field marking intersections onto the field plane.
 
@@ -132,10 +130,10 @@ def map_marking_intersections(
 
 def map_marking_segments(
         header: Header,
-        marking_segments_2d: List[sv2dm.MarkingSegment],
+        marking_segments_2d: list[sv2dm.MarkingSegment],
         ipm: IPM,
         output_frame: str,
-        logger: RcutilsLogger) -> List[sv3dm.MarkingSegment]:
+        logger: RcutilsLogger) -> list[sv3dm.MarkingSegment]:
     """
     Map a given list of 2D field marking segments onto the field plane.
 
@@ -187,10 +185,10 @@ def map_marking_segments(
 
 def map_marking_ellipses(
         header: Header,
-        ellipses_2d: List[sv2dm.MarkingEllipse],
+        ellipses_2d: list[sv2dm.MarkingEllipse],
         ipm: IPM,
         output_frame: str,
-        logger: RcutilsLogger) -> List[sv3dm.MarkingEllipse]:
+        logger: RcutilsLogger) -> list[sv3dm.MarkingEllipse]:
     """
     Map a given list of 2D field marking ellipses onto the field plane.
 
