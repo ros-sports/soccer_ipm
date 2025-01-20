@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import math
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from geometry_msgs.msg import TransformStamped
 import numpy as np
@@ -67,7 +67,7 @@ def standard_ipm_test_case(
         input_topic: str,
         input_msg: SV2DARR,
         output_msg_type: type,
-        output_topic: str) -> Tuple[SV3DARR, SV2DARR]:
+        output_topic: str) -> tuple[SV3DARR, SV2DARR]:
     # Init ros
     rclpy.init()
     # Create IPM node
@@ -83,7 +83,7 @@ def standard_ipm_test_case(
         TFMessage, 'tf', 10)
 
     # Create a shared reference to the recived message in the local scope
-    received_msg: List[Optional[output_msg_type]] = [None]
+    received_msg: list[Optional[output_msg_type]] = [None]
 
     # Create a callback with sets this reference
     def callback(msg):
