@@ -16,6 +16,7 @@ from ipm_library.ipm import IPM
 import rclpy
 from rclpy.duration import Duration
 from rclpy.executors import MultiThreadedExecutor
+from rclpy.experimental.events_executor import EventsExecutor
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo
 from soccer_ipm.msgs.ball import map_ball_array
@@ -27,7 +28,14 @@ from soccer_ipm.msgs.robots import map_robot_array
 from soccer_ipm.utils import catch_camera_info_not_set_error, catch_tf_timing_error
 import soccer_vision_2d_msgs.msg as sv2dm
 import soccer_vision_3d_msgs.msg as sv3dm
-import tf2_ros as tf2
+
+try:
+    from bitbots_tf_buffer import Buffer, TransformListener
+    fast_tf_buffer_available = True
+except ImportError:
+    from tf2_ros import Buffer, TransformListener
+    fast_tf_buffer_available = False
+    pass  # If bitbots_tf_buffer is not available, use the default tf2.Buffer
 
 
 class SoccerIPM(Node):
@@ -52,8 +60,8 @@ class SoccerIPM(Node):
         self.declare_parameter('use_distortion', False)
 
         # We need to create a tf buffer
-        self.tf_buffer = tf2.Buffer(cache_time=Duration(seconds=30.0))
-        self.tf_listener = tf2.TransformListener(self.tf_buffer, self)
+        self.tf_buffer = Buffer(cache_time=Duration(seconds=30.0))
+        self.tf_listener = TransformListener(self.tf_buffer, self)
 
         # Create an IPM instance
         self.ipm = IPM(self.tf_buffer, distortion=self.get_parameter('use_distortion').value)
@@ -218,7 +226,12 @@ class SoccerIPM(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = SoccerIPM()
-    ex = MultiThreadedExecutor(num_threads=4)
+    # Due to the fact that the bitbots_tf_buffer handles all tf2 communication in another node 
+    # we can use the single threaded EventsExecutor without running into deadlocks.
+    if fast_tf_buffer_available:
+        ex = EventsExecutor()
+    else:
+        ex = MultiThreadedExecutor(num_threads=4)
     ex.add_node(node)
     try:
         ex.spin()
