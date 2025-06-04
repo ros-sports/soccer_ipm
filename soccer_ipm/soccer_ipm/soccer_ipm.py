@@ -35,7 +35,6 @@ try:
 except ImportError:
     from tf2_ros import Buffer, TransformListener
     fast_tf_buffer_available = False
-    pass  # If bitbots_tf_buffer is not available, use the default tf2.Buffer
 
 
 class SoccerIPM(Node):
