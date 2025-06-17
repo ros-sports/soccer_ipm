@@ -225,7 +225,7 @@ class SoccerIPM(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = SoccerIPM()
-    # Due to the fact that the bitbots_tf_buffer handles all tf2 communication in another node 
+    # Due to the fact that the bitbots_tf_buffer handles all tf2 communication in another node
     # we can use the single threaded EventsExecutor without running into deadlocks.
     if fast_tf_buffer_available:
         ex = EventsExecutor()
