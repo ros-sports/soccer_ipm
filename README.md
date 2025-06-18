@@ -7,4 +7,4 @@
 
 ## Tip
 
-Also install the [Bit-Bots TF Buffer](https:://github.com/bit-bots/bitbots_tf_buffer) to get a significant performance boost (up to a magnitude).
+Also install the [Bit-Bots TF Buffer](https://github.com/bit-bots/bitbots_tf_buffer) to get a significant performance boost (up to a magnitude).
